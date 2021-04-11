@@ -9,9 +9,8 @@ export default class Claims extends Component {
   }
 
   componentDidMount = async () => {
-    console.log(this.props.claims);
-    // const myClaims = this.props.claims.filter((claim) => claim.planCurrentOwner === this.props.accountAddress);
-    // this.setState({ myClaims });
+    const myClaims = this.props.claims.filter((claim) => claim.claimedBy === this.props.accountAddress);
+    this.setState({ myClaims });
   };
 
   render() {
@@ -30,40 +29,56 @@ export default class Claims extends Component {
               </a>
             </h5>
             <div id="collapse1" className="collapse show">
-              <div className="card-body">
-                <div className="row">
-                  <div className="col-6">
-                    <p>Plan Id :</p>
-                    <h5>1</h5>
-                  </div>
-                  <div className="col-6">
-                    <p>Dispute Id :</p>
-                    <h5>0</h5>
-                  </div>
+              {this.state.myClaims.length !== 0 ? (
+                <>
+                  {this.state.myClaims.map((claim) => {
+                    return (
+                      <div className="card-body">
+                        <div className="row">
+                          <div className="col-6">
+                            <p>Plan Id :</p>
+                            <h5>{claim.planId}</h5>
+                          </div>
+                          <div className="col-6">
+                            <p>Claimed By :</p>
+                            <h5>{claim.claimedBy}</h5>
+                          </div>
+                        </div>
+                        <hr className="my-2" />
+                        <div className="row">
+                          <div className="col-6">
+                            <p>Dispute Id :</p>
+                            <h5>{claim.disputeId}</h5>
+                          </div>
+                          <div className="col-6">
+                            <p>Metaevidence Id :</p>
+                            <h5>{claim.metaEvidenceId}</h5>
+                          </div>
+                        </div>
+                        <hr className="my-2" />
+                        <div className="row">
+                          <div className="col-6">
+                            <p>Evidence Group Id :</p>
+                            <h5>{claim.evidenceGroupId}</h5>
+                          </div>
+                          <div className="col-6">
+                            <p>Status :</p>
+                            <h5>{claim.result}</h5>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <div className="pl-3 pt-3">
+                  <p className="lead">You don't have any active claims</p>
                 </div>
-                <hr className="my-2" />
-                <div className="row">
-                  <div className="col-6">
-                    <p>Metaevidence Id :</p>
-                    <h5>1</h5>
-                  </div>
-                  <div className="col-6">
-                    <p>Evidence Group Id :</p>
-                    <h5>1</h5>
-                  </div>
-                </div>
-                <hr className="my-2" />
-                <div className="row">
-                  <div className="col-6">
-                    <p>Status :</p>
-                    <h5>1</h5>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
           <div className="card bg-secondary">
-            <h5 className="card-header bg-primary">
+            <h5 className="card-header bg-dark">
               <a
                 href="#collapse2"
                 data-parent="#accordion"
@@ -74,28 +89,42 @@ export default class Claims extends Component {
               </a>
             </h5>
             <div id="collapse2" className="collapse show">
-              <table className="table table-hover text-center">
-                <thead>
-                  <tr>
-                    <th scope="col">Plan Id</th>
-                    <th scope="col">Claimed By</th>
-                    <th scope="col">Dispute Id</th>
-                    <th scope="col">MetaEvidence Id</th>
-                    <th scope="col">Evidence Group Id</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>1</td>
-                    <td>1</td>
-                    <td>1</td>
-                    <td>1</td>
-                    <td>Claimed</td>
-                  </tr>
-                </tbody>
-              </table>
+              {this.props.claims.length !== 0 ? (
+                <>
+                  <table className="table text-center">
+                    <thead>
+                      <tr>
+                        <th scope="col">Plan Id</th>
+                        <th scope="col">Claimed By</th>
+                        <th scope="col">Dispute Id</th>
+                        <th scope="col">MetaEvidence Id</th>
+                        <th scope="col">Evidence Group Id</th>
+                        <th scope="col">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.props.claims.map((claim) => {
+                        return (
+                          <tr>
+                            <th scope="row">{claim.planId}</th>
+                            <td>
+                              {claim.claimedBy.substr(0, 8) + "..." + claim.claimedBy.slice(claim.claimedBy.length - 8)}
+                            </td>
+                            <td>{claim.disputeId}</td>
+                            <td>{claim.metaEvidenceId}</td>
+                            <td>{claim.evidenceGroupId}</td>
+                            <td>{claim.result}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </>
+              ) : (
+                <div className="pl-3 pt-3">
+                  <p className="lead">No claims have been created</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

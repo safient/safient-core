@@ -29,7 +29,7 @@ export default class Navbar extends Component {
               >
                 <li className="nav-item">
                   <Link to="/" className="nav-link">
-                    Details
+                    Safex
                   </Link>
                 </li>
                 <li className="nav-item">
@@ -52,36 +52,21 @@ export default class Navbar extends Component {
                     Submit Evidence
                   </Link>
                 </li>
-                {/* <li className="nav-item">
-                  <Link to="/my-plan" className="nav-link">
-                    My Plan
+                <li className="nav-item">
+                  <Link to="/funds" className="nav-link">
+                    Funds
                   </Link>
-                </li> */}
+                </li>
                 <li className="nav-item">
                   <Link to="/plans" className="nav-link">
                     Plans
                   </Link>
                 </li>
-                {/* <li className="nav-item">
-                  <Link to="/my-claim" className="nav-link">
-                    My Claim
-                  </Link>
-                </li> */}
                 <li className="nav-item">
                   <Link to="/claims" className="nav-link">
                     Claims
                   </Link>
                 </li>
-                {/* <li className="nav-item">
-                  <Link to="/all-plans" className="nav-link">
-                    All Plans
-                  </Link>
-                </li> */}
-                {/* <li className="nav-item">
-                  <Link to="/all-claims" className="nav-link">
-                    All Claims
-                  </Link>
-                </li> */}
               </ul>
             </div>
           </div>

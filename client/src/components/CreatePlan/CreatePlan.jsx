@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { Link } from "react-router-dom";
 import Web3 from "web3";
 import Archon from "@kleros/archon";
 import ipfsPublish from "../../IPFS/ipfsPublish";
@@ -16,10 +17,10 @@ export default class CreatePlan extends Component {
       arbitrationFeeWei: "",
       arbitrationFeeEth: "",
       extraFeeEth: "",
-      safexAgreementURI:
+      safexAgreementLink:
         "https://ipfs.kleros.io/ipfs/QmPMdGmenYuh9kzhU6WkEvRsWpr1B8T7nVWA52u6yoJu13/Safex Agreement.png",
+      safexAgreementURI: "/ipfs/QmPMdGmenYuh9kzhU6WkEvRsWpr1B8T7nVWA52u6yoJu13/Safex Agreement.png",
       buffer: null,
-      fileName: "",
       userHasCreatedPlan: false,
     };
     this.encoder = new TextEncoder();
@@ -38,13 +39,14 @@ export default class CreatePlan extends Component {
 
   onFormSubmit = async (e) => {
     e.preventDefault();
-    this.props.setLoadingToTrue();
     let totalPrice;
     if (this.state.extraFeeEth !== 0 && this.state.extraFeeEth !== "" && this.state.extraFeeEth !== null) {
+      this.props.setLoadingToTrue();
       const extraFeeWei = web3.utils.toWei(this.state.extraFeeEth, "ether");
       const totalFunds = (Number(this.state.arbitrationFeeWei) + Number(extraFeeWei)).toString();
       totalPrice = totalFunds;
     } else {
+      this.props.setLoadingToTrue();
       totalPrice = this.state.arbitrationFeeWei;
     }
     const metaevidenceObj = {
@@ -83,19 +85,25 @@ export default class CreatePlan extends Component {
             </h5>
             <p>
               Arbitration fee (subject to change in the future) is collected and stored in the plan. It can be used by
-              the inheritor to create a claim. Owner of the plan can recover funds in the plan at anytime.
+              the inheritor to create a claim. Owner of the plan can recover funds in the plan at anytime{" "}
+              <Link to="/funds">
+                <a className="font-weight-bold">
+                  <u>here</u>
+                </a>
+              </Link>
+              .
             </p>
             <hr className="my-4" />
             <p className="lead">Safex Agreement :</p>
             <h5 className="text-lowercase">
-              <a href={this.state.safexAgreementURI} target="_blank">
+              <a href={this.state.safexAgreementLink} target="_blank">
                 Click Here 📎
               </a>
             </h5>
             <hr className="my-4" />
-            <p className="lead">Create Claim :</p>
+            <p className="lead">Create Plan :</p>
             <form onSubmit={this.onFormSubmit}>
-              <div className="form-group">
+              <div className="form-group mb-4 mt-4">
                 <h5 className="text-capitalize">Inheritor address :</h5>
                 <input
                   type="text"
@@ -106,7 +114,7 @@ export default class CreatePlan extends Component {
                   onChange={(e) => this.setState({ inheritorAddress: e.target.value })}
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group mb-4">
                 <h5 className="text-capitalize">
                   Add Extra Funds <small>(Optional)</small> :
                 </h5>
@@ -126,7 +134,17 @@ export default class CreatePlan extends Component {
             </form>
           </>
         ) : (
-          <p className="lead">You already have a plan.</p>
+          <div>
+            <p className="lead">
+              You have already created a plan, you can view it{" "}
+              <Link to="/plans">
+                <a className="font-weight-bold">
+                  <u>here</u>
+                </a>
+              </Link>
+              .
+            </p>
+          </div>
         )}
       </div>
     );

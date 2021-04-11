@@ -81,12 +81,14 @@ export default class Plans extends Component {
                   })}
                 </>
               ) : (
-                <div></div>
+                <div className="pl-3 pt-3">
+                  <p className="lead">You don't have any active plans</p>
+                </div>
               )}
             </div>
           </div>
-          <div className="card bg-secondary">
-            <h5 className="card-header bg-primary">
+          <div className="card bg-secondary pb-0">
+            <h5 className="card-header bg-dark">
               <a
                 href="#collapse2"
                 data-parent="#accordion"
@@ -97,20 +99,20 @@ export default class Plans extends Component {
               </a>
             </h5>
             <div id="collapse2" className="collapse show">
-              <table className="table table-hover text-center">
-                <thead>
-                  <tr>
-                    <th scope="col">Plan Id</th>
-                    <th scope="col">Created By</th>
-                    <th scope="col">Owned By</th>
-                    <th scope="col">Inheritor</th>
-                    <th scope="col">No. of claims</th>
-                    <th scope="col">Funds</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {this.props.plans.length !== 0 ? (
-                    <>
+              {this.props.plans.length !== 0 ? (
+                <>
+                  <table className="table text-center">
+                    <thead>
+                      <tr>
+                        <th scope="col">Plan Id</th>
+                        <th scope="col">Created By</th>
+                        <th scope="col">Owned By</th>
+                        <th scope="col">Inheritor</th>
+                        <th scope="col">No. of claims</th>
+                        <th scope="col">Funds</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {this.props.plans.map((plan) => {
                         return (
                           <tr>
@@ -135,12 +137,14 @@ export default class Plans extends Component {
                           </tr>
                         );
                       })}
-                    </>
-                  ) : (
-                    <div></div>
-                  )}
-                </tbody>
-              </table>
+                    </tbody>
+                  </table>
+                </>
+              ) : (
+                <div className="pl-3 pt-3">
+                  <p className="lead">No plans have been created</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

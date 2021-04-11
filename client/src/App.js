@@ -14,6 +14,9 @@ import Navbar from "./components/Navbar/Navbar";
 import Loader from "./components/Loader/Loader";
 import Plans from "./components/Plans/Plans";
 import Claims from "./components/Claims/Claims";
+import CreateClaim from "./components/CreateClaim/CreateClaim";
+import SubmitEvidence from "./components/SubmitEvidence/SubmitEvidence";
+import Funds from "./components/Funds/Funds";
 
 export default class App extends Component {
   constructor(props) {
@@ -122,6 +125,27 @@ export default class App extends Component {
       });
   };
 
+  createClaim = async (_planId, _evidence) => {
+    this.state.safexMainContract.methods
+      .createClaim(_planId, _evidence)
+      .send({ from: this.state.accountAddress })
+      .on("confirmation", () => {
+        this.setState({ loading: false });
+        window.location.reload();
+      });
+  };
+
+  submitEvidence = async (_disputeId, _evidence) => {
+    console.log(_disputeId, _evidence);
+    this.state.safexMainContract.methods
+      .submitEvidence(_disputeId, _evidence)
+      .send({ from: this.state.accountAddress })
+      .on("confirmation", () => {
+        this.setState({ loading: false });
+        window.location.reload();
+      });
+  };
+
   render() {
     return (
       <div className="container">
@@ -163,11 +187,27 @@ export default class App extends Component {
                     safexMainContract={this.state.safexMainContract}
                     accountAddress={this.state.accountAddress}
                     setLoadingToTrue={this.setLoadingToTrue}
-                    setLoadingToFalse={this.setLoadingToFalse}
                     createPlan={this.createPlan}
                   />
                 )}
               />
+              <Route
+                path="/create-claim"
+                render={() => (
+                  <CreateClaim
+                    arbitratorContractAddress={this.state.arbitratorContractAddress}
+                    setLoadingToTrue={this.setLoadingToTrue}
+                    createClaim={this.createClaim}
+                  />
+                )}
+              />
+              <Route
+                path="/submit-evidence"
+                render={() => (
+                  <SubmitEvidence setLoadingToTrue={this.setLoadingToTrue} submitEvidence={this.submitEvidence} />
+                )}
+              />
+              <Route path="/funds" render={() => <Funds />} />
               <Route
                 path="/plans"
                 render={() => <Plans accountAddress={this.state.accountAddress} plans={this.state.plans} />}
