@@ -213,20 +213,5 @@ contract("SafexMain & AutoAppealableArbitrator", async (accounts) => {
       // FAILURE : no funds remaining in the plan
       await safexMain.recoverPlanFunds(1, { from: accounts[0] }).should.be.rejected;
     });
-
-    it("SafexMain allows it's admin to set the total number of claims allowed on a plan", async () => {
-      let totalClaimsAllowed;
-      totalClaimsAllowed = await safexMain.getTotalClaimsAllowed({ from: accounts[2] });
-      assert.equal(totalClaimsAllowed.toNumber(), 2);
-
-      // FAILURE : only SafexMain contract's admin can execute this
-      await safexMain.setTotalClaimsAllowed(4, { from: accounts[2] }).should.be.rejected;
-
-      // SUCCESS : set total number of claims allowed on a plan
-      safexMainResult = await safexMain.setTotalClaimsAllowed(3, { from: accounts[0] });
-
-      totalClaimsAllowed = await safexMain.getTotalClaimsAllowed({ from: accounts[2] });
-      assert.equal(totalClaimsAllowed.toNumber(), 3);
-    });
   });
 });
