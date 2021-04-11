@@ -22,7 +22,7 @@ export default class SafexMainDetails extends Component {
 
   render() {
     return (
-      <div className="p-4 pt-5">
+      <div className="p-4 pt-4">
         <p className="lead">AutoAppealableArbitrator contract address :</p>
         <h5>{this.props.arbitratorContractAddress}</h5>
         <hr className="my-4" />

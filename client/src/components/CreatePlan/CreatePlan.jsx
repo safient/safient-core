@@ -74,7 +74,7 @@ export default class CreatePlan extends Component {
 
   render() {
     return (
-      <div className="p-4 pt-5">
+      <div className="p-4 pt-4">
         {!this.state.userHasCreatedPlan ? (
           <>
             <p className="lead">Required Minimum Funds To Create A Plan :</p>

@@ -10,8 +10,10 @@ import ConnectToMetamask from "./components/ConnectToMetamask/ConnectToMetamask"
 import SafexMainDetails from "./components/SafexMainDetails/SafexMainDetails";
 import CreatePlan from "./components/CreatePlan/CreatePlan";
 import MyAccount from "./components/MyAccount/MyAccount";
-import Loader from "./components/Loader/Loader";
 import Navbar from "./components/Navbar/Navbar";
+import Loader from "./components/Loader/Loader";
+import Plans from "./components/Plans/Plans";
+import Claims from "./components/Claims/Claims";
 
 export default class App extends Component {
   constructor(props) {
@@ -77,7 +79,7 @@ export default class App extends Component {
         const claimsCount = await safexMainContract.methods.claimsCount().call();
         this.setState({ plansCount });
         this.setState({ claimsCount });
-        for (let i = 0; i < plansCount; i++) {
+        for (let i = 1; i <= plansCount; i++) {
           const plan = await safexMainContract.methods.plans(i).call();
           this.setState({
             plans: [...this.state.plans, plan],
@@ -104,6 +106,10 @@ export default class App extends Component {
 
   setLoadingToTrue = () => {
     this.setState({ loading: true });
+  };
+
+  setLoadingToFalse = () => {
+    this.setState({ loading: false });
   };
 
   createPlan = async (_inheritor, _metaEvidence, _totalPrice) => {
@@ -157,29 +163,19 @@ export default class App extends Component {
                     safexMainContract={this.state.safexMainContract}
                     accountAddress={this.state.accountAddress}
                     setLoadingToTrue={this.setLoadingToTrue}
+                    setLoadingToFalse={this.setLoadingToFalse}
                     createPlan={this.createPlan}
                   />
                 )}
               />
-              {/* <Route
-                path="/create-claims"
-                exact
-                render={() => (
-                  <CreateClaims
-                    submitClaim={this.submitClaim}
-                    submitEvidence={this.submitEvidence}
-                    arbitratorContract={this.state.arbitratorContract}
-                    claims={this.state.claims}
-                    accountAddress={this.state.accountAddress}
-                  />
-                )}
-              /> */}
-              {/* <Route
-                path="/my-claims"
-                exact
-                render={() => <MyClaims claims={this.state.claims} accountAddress={this.state.accountAddress} />}
-              /> */}
-              {/* <Route path="/all-claims" exact render={() => <AllClaims claims={this.state.claims} />} /> */}
+              <Route
+                path="/plans"
+                render={() => <Plans accountAddress={this.state.accountAddress} plans={this.state.plans} />}
+              />
+              <Route
+                path="/claims"
+                render={() => <Claims accountAddress={this.state.accountAddress} claims={this.state.claims} />}
+              />
             </HashRouter>
           </>
         )}

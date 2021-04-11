@@ -17,7 +17,7 @@ export default class Navbar extends Component {
               className="navbar-brand ml-2"
               style={{ fontSize: "1rem", fontWeight: "normal", letterSpacing: "0.2rem" }}
             >
-              Safex Main
+              Safex Claims
             </Link>
             <button className="navbar-toggler" data-toggle="collapse" data-target="#navbarNav">
               <span className="navbar-toggler-icon"></span>
@@ -27,6 +27,11 @@ export default class Navbar extends Component {
                 style={{ fontSize: "0.8rem", letterSpacing: "0.2rem", fontWeight: "normal" }}
                 className="navbar-nav ml-auto"
               >
+                <li className="nav-item">
+                  <Link to="/" className="nav-link">
+                    Details
+                  </Link>
+                </li>
                 <li className="nav-item">
                   <Link to="/my-account" className="nav-link">
                     My Account
@@ -47,26 +52,36 @@ export default class Navbar extends Component {
                     Submit Evidence
                   </Link>
                 </li>
-                <li className="nav-item">
+                {/* <li className="nav-item">
                   <Link to="/my-plan" className="nav-link">
                     My Plan
                   </Link>
-                </li>
+                </li> */}
                 <li className="nav-item">
+                  <Link to="/plans" className="nav-link">
+                    Plans
+                  </Link>
+                </li>
+                {/* <li className="nav-item">
                   <Link to="/my-claim" className="nav-link">
                     My Claim
                   </Link>
-                </li>
+                </li> */}
                 <li className="nav-item">
+                  <Link to="/claims" className="nav-link">
+                    Claims
+                  </Link>
+                </li>
+                {/* <li className="nav-item">
                   <Link to="/all-plans" className="nav-link">
                     All Plans
                   </Link>
-                </li>
-                <li className="nav-item">
+                </li> */}
+                {/* <li className="nav-item">
                   <Link to="/all-claims" className="nav-link">
                     All Claims
                   </Link>
-                </li>
+                </li> */}
               </ul>
             </div>
           </div>
