@@ -30,6 +30,7 @@ contract SafexMain is IArbitrable, IEvidence {
     }
 
     struct Claim {
+        uint256 planId;
         address claimedBy;
         uint256 disputeId;
         uint256 metaEvidenceId;
@@ -78,6 +79,12 @@ contract SafexMain is IArbitrable, IEvidence {
         address indexed planCreatedBy,
         address indexed planInheritor,
         uint256 indexed metaEvidenceId
+    );
+
+    event CreateClaim(
+        address indexed claimCreatedBy,
+        uint256 indexed planId,
+        uint256 indexed disputeId
     );
 
     /* Constructor */
@@ -177,6 +184,7 @@ contract SafexMain is IArbitrable, IEvidence {
 
         Claim memory claim = claims[disputeID];
         claim = Claim({
+            planId: _planId,
             claimedBy: msg.sender,
             disputeId: disputeID,
             metaEvidenceId: plan.metaEvidenceId,
@@ -187,6 +195,8 @@ contract SafexMain is IArbitrable, IEvidence {
         claims[disputeID] = claim;
 
         claimsCount += 1;
+
+        emit CreateClaim(msg.sender, _planId, disputeID);
 
         plan.claimsCount += 1;
         plan.planFunds -= arbitrator.arbitrationCost("");
@@ -273,14 +283,6 @@ contract SafexMain is IArbitrable, IEvidence {
         );
 
         emit Evidence(arbitrator, claim.evidenceGroupId, msg.sender, _evidence);
-    }
-
-    /* Setters */
-    function setTotalClaimsAllowed(uint256 _newTotalClaimsAllowed)
-        external
-        onlySafexMainAdmin
-    {
-        _totalClaimsAllowed = _newTotalClaimsAllowed;
     }
 
     /* Getters */
