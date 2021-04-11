@@ -8,6 +8,7 @@ import SafexMain from "./contracts/SafexMain.json";
 import ContractsNotDeployed from "./components/ContractsNotDeployed/ContractsNotDeployed";
 import ConnectToMetamask from "./components/ConnectToMetamask/ConnectToMetamask";
 import SafexMainDetails from "./components/SafexMainDetails/SafexMainDetails";
+import CreatePlan from "./components/CreatePlan/CreatePlan";
 import MyAccount from "./components/MyAccount/MyAccount";
 import Loader from "./components/Loader/Loader";
 import Navbar from "./components/Navbar/Navbar";
@@ -77,7 +78,7 @@ export default class App extends Component {
         this.setState({ plansCount });
         this.setState({ claimsCount });
         for (let i = 0; i < plansCount; i++) {
-          const plan = await safexMainContract.methods.planss(i).call();
+          const plan = await safexMainContract.methods.plans(i).call();
           this.setState({
             plans: [...this.state.plans, plan],
           });
@@ -99,6 +100,20 @@ export default class App extends Component {
     await window.ethereum.enable();
     this.setState({ metamaskConnected: true });
     window.location.reload();
+  };
+
+  setLoadingToTrue = () => {
+    this.setState({ loading: true });
+  };
+
+  createPlan = async (_inheritor, _metaEvidence, _totalPrice) => {
+    this.state.safexMainContract.methods
+      .createPlan(_inheritor, _metaEvidence)
+      .send({ from: this.state.accountAddress, value: _totalPrice })
+      .on("confirmation", () => {
+        this.setState({ loading: false });
+        window.location.reload();
+      });
   };
 
   render() {
@@ -129,9 +144,21 @@ export default class App extends Component {
               />
               <Route
                 path="/my-account"
-                exact
                 render={() => (
                   <MyAccount accountAddress={this.state.accountAddress} accountBalance={this.state.accountBalance} />
+                )}
+              />
+              <Route
+                path="/create-plan"
+                render={() => (
+                  <CreatePlan
+                    arbitratorContractAddress={this.state.arbitratorContractAddress}
+                    safexMainContractAddress={this.state.safexMainContractAddress}
+                    safexMainContract={this.state.safexMainContract}
+                    accountAddress={this.state.accountAddress}
+                    setLoadingToTrue={this.setLoadingToTrue}
+                    createPlan={this.createPlan}
+                  />
                 )}
               />
               {/* <Route

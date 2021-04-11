@@ -7,7 +7,7 @@ export default function MyAccount({ accountAddress, accountBalance }) {
       <h5>{accountAddress}</h5>
       <hr className="my-4" />
       <p className="lead">Account balance :</p>
-      <h5>{accountBalance} Ξ</h5>
+      <h5>{accountBalance} ETH</h5>
     </div>
   );
 }

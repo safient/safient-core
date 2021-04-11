@@ -1,18 +1,21 @@
 import React, { Component } from "react";
+import Web3 from "web3";
+
+const web3 = new Web3();
 
 export default class SafexMainDetails extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      safexMainBalance: 0,
+      safexMainBalanceEth: 0,
       claimsAllowed: 0,
     };
   }
 
   componentDidMount = async () => {
-    const safexMainBalance = await this.props.safexMainContract.methods.getSafexMainContractBalance().call();
-    // console.log(safexMainBalance);
-    this.setState({ safexMainBalance });
+    const safexMainBalanceWei = await this.props.safexMainContract.methods.getSafexMainContractBalance().call();
+    const safexMainBalanceEth = web3.utils.fromWei(safexMainBalanceWei, "ether")
+    this.setState({ safexMainBalanceEth });
     const claimsAllowed = await this.props.safexMainContract.methods.getTotalClaimsAllowed().call();
     this.setState({ claimsAllowed });
   };
@@ -27,7 +30,7 @@ export default class SafexMainDetails extends Component {
         <h5>{this.props.safexMainContractAddress}</h5>
         <hr className="my-4" />
         <p className="lead">SafexMain balance :</p>
-        <h5>{this.state.safexMainBalance} Ξ</h5>
+        <h5>{this.state.safexMainBalanceEth} ETH</h5>
         <hr className="my-4" />
         <p className="lead">No. of plans :</p>
         <h5>{this.props.plansCount}</h5>

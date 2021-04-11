@@ -43,6 +43,11 @@ export default class Navbar extends Component {
                   </Link>
                 </li>
                 <li className="nav-item">
+                  <Link to="/submit-evidence" className="nav-link">
+                    Submit Evidence
+                  </Link>
+                </li>
+                <li className="nav-item">
                   <Link to="/my-plan" className="nav-link">
                     My Plan
                   </Link>
