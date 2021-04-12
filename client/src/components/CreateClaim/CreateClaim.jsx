@@ -6,8 +6,8 @@ import ipfsPublish from "../../IPFS/ipfsPublish";
 
 const web3 = new Web3();
 
-// const archon = new Archon("https://ropsten.infura.io/v3/2138913d0e324125bf671fafd93e186c", "https://ipfs.kleros.io");
-const archon = new Archon("http://127.0.0.1:7545");
+const archon = new Archon("https://ropsten.infura.io/v3/2138913d0e324125bf671fafd93e186c", "https://ipfs.kleros.io");
+// const archon = new Archon("http://127.0.0.1:7545");
 
 export default class CreateClaim extends Component {
   constructor(props) {

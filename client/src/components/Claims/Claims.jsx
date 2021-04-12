@@ -1,4 +1,7 @@
 import React, { Component } from "react";
+import Archon from "@kleros/archon";
+
+const archon = new Archon("https://ropsten.infura.io/v3/2138913d0e324125bf671fafd93e186c", "https://ipfs.kleros.io");
 
 export default class Claims extends Component {
   constructor(props) {
@@ -11,6 +14,12 @@ export default class Claims extends Component {
   componentDidMount = async () => {
     const myClaims = this.props.claims.filter((claim) => claim.claimedBy === this.props.accountAddress);
     this.setState({ myClaims });
+    const evidence = await archon.arbitrable.getEvidence(
+      this.props.safexMainContractAddress,
+      this.props.arbitratorContractAddress,
+      2
+    );
+    console.log(evidence);
   };
 
   render() {
@@ -28,12 +37,12 @@ export default class Claims extends Component {
                 My Claim
               </a>
             </h5>
-            <div id="collapse1" className="collapse">
+            <div id="collapse1" className="collapse show">
               {this.state.myClaims.length !== 0 ? (
                 <>
                   {this.state.myClaims.map((claim) => {
                     return (
-                      <div className="card-body">
+                      <div className="card-body" key={claim.disputeId}>
                         <div className="row">
                           <div className="col-6">
                             <p>Plan Id :</p>
@@ -97,7 +106,7 @@ export default class Claims extends Component {
                 All Claims
               </a>
             </h5>
-            <div id="collapse2" className="collapse">
+            <div id="collapse2" className="collapse show">
               {this.props.claims.length !== 0 ? (
                 <table className="table text-center">
                   <thead>
@@ -113,7 +122,7 @@ export default class Claims extends Component {
                   <tbody className="font-weight-bold">
                     {this.props.claims.map((claim) => {
                       return (
-                        <tr>
+                        <tr key={claim.disputeId}>
                           <th scope="row">{claim.planId}</th>
                           <td>
                             {claim.claimedBy.substr(0, 6) + "...." + claim.claimedBy.slice(claim.claimedBy.length - 6)}

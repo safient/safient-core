@@ -243,7 +243,14 @@ export default class App extends Component {
               />
               <Route
                 path="/claims"
-                render={() => <Claims accountAddress={this.state.accountAddress} claims={this.state.claims} />}
+                render={() => (
+                  <Claims
+                    accountAddress={this.state.accountAddress}
+                    claims={this.state.claims}
+                    safexMainContractAddress={this.state.safexMainContractAddress}
+                    arbitratorContractAddress={this.state.arbitratorContractAddress}
+                  />
+                )}
               />
             </HashRouter>
           </>

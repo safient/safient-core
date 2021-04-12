@@ -31,12 +31,12 @@ export default class Plans extends Component {
                 My Plan
               </a>
             </h5>
-            <div id="collapse1" className="collapse">
+            <div id="collapse1" className="collapse show">
               {this.state.myPlans.length !== 0 ? (
                 <>
                   {this.state.myPlans.map((plan) => {
                     return (
-                      <div className="card-body">
+                      <div className="card-body" key={plan.planId}>
                         <div className="row">
                           <div className="col-6">
                             <p>Plan Id :</p>
@@ -98,7 +98,7 @@ export default class Plans extends Component {
                 All Plans
               </a>
             </h5>
-            <div id="collapse2" className="collapse">
+            <div id="collapse2" className="collapse show">
               {this.props.plans.length !== 0 ? (
                 <table className="table text-center">
                   <thead>
@@ -114,7 +114,7 @@ export default class Plans extends Component {
                   <tbody className="font-weight-bold">
                     {this.props.plans.map((plan) => {
                       return (
-                        <tr>
+                        <tr key={plan.planId}>
                           <th scope="row">{plan.planId}</th>
                           <td>
                             {plan.planCreatedBy.substr(0, 5) +
