@@ -31,7 +31,7 @@ export default class Plans extends Component {
                 My Plan
               </a>
             </h5>
-            <div id="collapse1" className="collapse show">
+            <div id="collapse1" className="collapse">
               {this.state.myPlans.length !== 0 ? (
                 <>
                   {this.state.myPlans.map((plan) => {
@@ -98,48 +98,46 @@ export default class Plans extends Component {
                 All Plans
               </a>
             </h5>
-            <div id="collapse2" className="collapse show">
+            <div id="collapse2" className="collapse">
               {this.props.plans.length !== 0 ? (
-                <>
-                  <table className="table text-center">
-                    <thead>
-                      <tr>
-                        <th scope="col">Plan Id</th>
-                        <th scope="col">Created By</th>
-                        <th scope="col">Owned By</th>
-                        <th scope="col">Inheritor</th>
-                        <th scope="col">No. of claims</th>
-                        <th scope="col">Funds</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {this.props.plans.map((plan) => {
-                        return (
-                          <tr>
-                            <th scope="row">{plan.planId}</th>
-                            <td>
-                              {plan.planCreatedBy.substr(0, 5) +
-                                "..." +
-                                plan.planCreatedBy.slice(plan.planCreatedBy.length - 5)}
-                            </td>
-                            <td>
-                              {plan.planCurrentOwner.substr(0, 5) +
-                                "..." +
-                                plan.planCurrentOwner.slice(plan.planCurrentOwner.length - 5)}
-                            </td>
-                            <td>
-                              {plan.planInheritor.substr(0, 5) +
-                                "..." +
-                                plan.planInheritor.slice(plan.planInheritor.length - 5)}
-                            </td>
-                            <td>{plan.claimsCount}</td>
-                            <td>{web3.utils.fromWei(plan.planFunds, "ether")} ETH</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </>
+                <table className="table text-center">
+                  <thead>
+                    <tr>
+                      <th scope="col">Plan Id</th>
+                      <th scope="col">Created By</th>
+                      <th scope="col">Owned By</th>
+                      <th scope="col">Inheritor</th>
+                      <th scope="col">No. of claims</th>
+                      <th scope="col">Funds</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-weight-bold">
+                    {this.props.plans.map((plan) => {
+                      return (
+                        <tr>
+                          <th scope="row">{plan.planId}</th>
+                          <td>
+                            {plan.planCreatedBy.substr(0, 5) +
+                              "..." +
+                              plan.planCreatedBy.slice(plan.planCreatedBy.length - 5)}
+                          </td>
+                          <td>
+                            {plan.planCurrentOwner.substr(0, 5) +
+                              "..." +
+                              plan.planCurrentOwner.slice(plan.planCurrentOwner.length - 5)}
+                          </td>
+                          <td>
+                            {plan.planInheritor.substr(0, 5) +
+                              "..." +
+                              plan.planInheritor.slice(plan.planInheritor.length - 5)}
+                          </td>
+                          <td>{plan.claimsCount}</td>
+                          <td>{web3.utils.fromWei(plan.planFunds, "ether")} ETH</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               ) : (
                 <div className="pl-3 pt-3">
                   <p className="lead">No plans have been created</p>

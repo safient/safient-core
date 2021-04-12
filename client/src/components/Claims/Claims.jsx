@@ -28,7 +28,7 @@ export default class Claims extends Component {
                 My Claim
               </a>
             </h5>
-            <div id="collapse1" className="collapse show">
+            <div id="collapse1" className="collapse">
               {this.state.myClaims.length !== 0 ? (
                 <>
                   {this.state.myClaims.map((claim) => {
@@ -63,7 +63,16 @@ export default class Claims extends Component {
                           </div>
                           <div className="col-6">
                             <p>Status :</p>
-                            <h5>{claim.result}</h5>
+                            <h5
+                              className={
+                                (claim.result === "Active" && "bg-warning") ||
+                                (claim.result === "Passed" && "bg-success") ||
+                                (claim.result === "Failed" && "bg-danger")
+                              }
+                              style={{ width: "max-content", color: "#fff", padding: "0.6rem 1rem" }}
+                            >
+                              {claim.result}
+                            </h5>
                           </div>
                         </div>
                       </div>
@@ -88,38 +97,45 @@ export default class Claims extends Component {
                 All Claims
               </a>
             </h5>
-            <div id="collapse2" className="collapse show">
+            <div id="collapse2" className="collapse">
               {this.props.claims.length !== 0 ? (
-                <>
-                  <table className="table text-center">
-                    <thead>
-                      <tr>
-                        <th scope="col">Plan Id</th>
-                        <th scope="col">Claimed By</th>
-                        <th scope="col">Dispute Id</th>
-                        <th scope="col">MetaEvidence Id</th>
-                        <th scope="col">Evidence Group Id</th>
-                        <th scope="col">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {this.props.claims.map((claim) => {
-                        return (
-                          <tr>
-                            <th scope="row">{claim.planId}</th>
-                            <td>
-                              {claim.claimedBy.substr(0, 8) + "..." + claim.claimedBy.slice(claim.claimedBy.length - 8)}
-                            </td>
-                            <td>{claim.disputeId}</td>
-                            <td>{claim.metaEvidenceId}</td>
-                            <td>{claim.evidenceGroupId}</td>
-                            <td>{claim.result}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </>
+                <table className="table text-center">
+                  <thead>
+                    <tr>
+                      <th scope="col">Plan Id</th>
+                      <th scope="col">Claimed By</th>
+                      <th scope="col">Dispute Id</th>
+                      <th scope="col">MetaEvidence Id</th>
+                      <th scope="col">Evidence Group Id</th>
+                      <th scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-weight-bold">
+                    {this.props.claims.map((claim) => {
+                      return (
+                        <tr>
+                          <th scope="row">{claim.planId}</th>
+                          <td>
+                            {claim.claimedBy.substr(0, 6) + "...." + claim.claimedBy.slice(claim.claimedBy.length - 6)}
+                          </td>
+                          <td>{claim.disputeId}</td>
+                          <td>{claim.metaEvidenceId}</td>
+                          <td>{claim.evidenceGroupId}</td>
+                          <td
+                            className={
+                              (claim.result === "Active" && "bg-warning") ||
+                              (claim.result === "Passed" && "bg-success") ||
+                              (claim.result === "Failed" && "bg-danger")
+                            }
+                            style={{ color: "#fff", padding: "" }}
+                          >
+                            {claim.result}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               ) : (
                 <div className="pl-3 pt-3">
                   <p className="lead">No claims have been created</p>

@@ -70,7 +70,6 @@ export default class CreatePlan extends Component {
     };
     const cid = await ipfsPublish("metaEvidence.json", this.encoder.encode(JSON.stringify(metaevidenceObj)));
     const metaevidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
-    // const metaEvidence = `https://ipfs.kleros.io${metaevidenceURI}`;
     this.props.createPlan(this.state.inheritorAddress, metaevidenceURI, totalPrice);
   };
 

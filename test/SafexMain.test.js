@@ -139,7 +139,7 @@ contract("SafexMain & AutoAppealableArbitrator", async (accounts) => {
       assert.equal(claim.metaEvidenceId.toNumber(), 1);
       assert.equal(claim.evidenceGroupId.toNumber(), 1);
       assert.equal(claim.status.toNumber(), 0); // Active
-      assert.equal(claim.result, "");
+      assert.equal(claim.result, "Active");
 
       // FAILURE : plan does not exist
       await safexMain.createClaim(
@@ -175,7 +175,7 @@ contract("SafexMain & AutoAppealableArbitrator", async (accounts) => {
 
       const claim = await safexMain.claims(0);
       assert.equal(claim.status.toNumber(), 2); // Failed
-      assert.equal(claim.result, "Do not initiate reconstruction"); // Do not initiate reconstruction
+      assert.equal(claim.result, "Failed"); // Failed
     });
 
     it("SafexMain allows users to deposit funds in a plan", async () => {

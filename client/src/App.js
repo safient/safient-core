@@ -8,14 +8,14 @@ import SafexMain from "./contracts/SafexMain.json";
 import ContractsNotDeployed from "./components/ContractsNotDeployed/ContractsNotDeployed";
 import ConnectToMetamask from "./components/ConnectToMetamask/ConnectToMetamask";
 import SafexMainDetails from "./components/SafexMainDetails/SafexMainDetails";
+import SubmitEvidence from "./components/SubmitEvidence/SubmitEvidence";
+import CreateClaim from "./components/CreateClaim/CreateClaim";
 import CreatePlan from "./components/CreatePlan/CreatePlan";
 import MyAccount from "./components/MyAccount/MyAccount";
 import Navbar from "./components/Navbar/Navbar";
 import Loader from "./components/Loader/Loader";
-import Plans from "./components/Plans/Plans";
 import Claims from "./components/Claims/Claims";
-import CreateClaim from "./components/CreateClaim/CreateClaim";
-import SubmitEvidence from "./components/SubmitEvidence/SubmitEvidence";
+import Plans from "./components/Plans/Plans";
 import Funds from "./components/Funds/Funds";
 
 export default class App extends Component {
@@ -136,10 +136,29 @@ export default class App extends Component {
   };
 
   submitEvidence = async (_disputeId, _evidence) => {
-    console.log(_disputeId, _evidence);
     this.state.safexMainContract.methods
       .submitEvidence(_disputeId, _evidence)
       .send({ from: this.state.accountAddress })
+      .on("confirmation", () => {
+        this.setState({ loading: false });
+        window.location.reload();
+      });
+  };
+
+  recoverPlanFunds = async (_planId) => {
+    this.state.safexMainContract.methods
+      .recoverPlanFunds(_planId)
+      .send({ from: this.state.accountAddress })
+      .on("confirmation", () => {
+        this.setState({ loading: false });
+        window.location.reload();
+      });
+  };
+
+  depositPlanFunds = async (_planId, _depositAmount) => {
+    this.state.safexMainContract.methods
+      .depositPlanFunds(_planId)
+      .send({ from: this.state.accountAddress, value: _depositAmount })
       .on("confirmation", () => {
         this.setState({ loading: false });
         window.location.reload();
@@ -207,7 +226,17 @@ export default class App extends Component {
                   <SubmitEvidence setLoadingToTrue={this.setLoadingToTrue} submitEvidence={this.submitEvidence} />
                 )}
               />
-              <Route path="/funds" render={() => <Funds />} />
+              <Route
+                path="/funds"
+                render={() => (
+                  <Funds
+                    setLoadingToTrue={this.setLoadingToTrue}
+                    plansCount={this.state.plansCount}
+                    recoverPlanFunds={this.recoverPlanFunds}
+                    depositPlanFunds={this.depositPlanFunds}
+                  />
+                )}
+              />
               <Route
                 path="/plans"
                 render={() => <Plans accountAddress={this.state.accountAddress} plans={this.state.plans} />}

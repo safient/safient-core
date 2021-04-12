@@ -14,7 +14,7 @@ export default class SafexMainDetails extends Component {
 
   componentDidMount = async () => {
     const safexMainBalanceWei = await this.props.safexMainContract.methods.getSafexMainContractBalance().call();
-    const safexMainBalanceEth = web3.utils.fromWei(safexMainBalanceWei, "ether")
+    const safexMainBalanceEth = web3.utils.fromWei(safexMainBalanceWei, "ether");
     this.setState({ safexMainBalanceEth });
     const claimsAllowed = await this.props.safexMainContract.methods.getTotalClaimsAllowed().call();
     this.setState({ claimsAllowed });

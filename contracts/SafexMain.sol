@@ -190,7 +190,7 @@ contract SafexMain is IArbitrable, IEvidence {
             metaEvidenceId: plan.metaEvidenceId,
             evidenceGroupId: evidenceGroupID,
             status: ClaimStatus.Active,
-            result: ""
+            result: "Active"
         });
         claims[disputeID] = claim;
 
@@ -219,15 +219,15 @@ contract SafexMain is IArbitrable, IEvidence {
         require(claim.status == ClaimStatus.Active, "Claim already resolved");
 
         if (_ruling == uint256(ClaimResult.initiateReconstruction)) {
-            claim.status = ClaimStatus.Passed;
-            claim.result = "Initiate reconstruction";
+            claim.status = ClaimStatus.Passed; // 1
+            claim.result = "Passed";
         } else if (
             _ruling == uint256(ClaimResult.doNotInitiateReconstruction)
         ) {
-            claim.status = ClaimStatus.Failed;
-            claim.result = "Do not initiate reconstruction";
+            claim.status = ClaimStatus.Failed; // 2
+            claim.result = "Failed";
         } else if (_ruling == uint256(ClaimResult.refusedToArbitrate)) {
-            claim.result = "Refused to arbitrate";
+            claim.result = "RTA"; // 0,  Refused To Arbitrate (RTA) 0
         }
 
         claims[_disputeID] = claim;
