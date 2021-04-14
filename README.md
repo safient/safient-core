@@ -3,7 +3,7 @@
 #
 ### Deployments
 #### SafexMain Smart Contract is deployed to Ropsten Testnet - [0x69d36535524997af56c2cb28af019d0f997e5044](https://ropsten.etherscan.io/address/0x69d36535524997af56c2cb28af019d0f997e5044)
-#### Access Safex Claims DApp at [SafexClaims](https://devpavan04.github.io/safex-claims/#/).
+#### Access Safex Claims DApp at [SafexClaims](https://devpavan04.github.io/safex-claims/).
 #
 ### Run the DApp Locally
 #### Install truffle
