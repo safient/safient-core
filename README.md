@@ -1,11 +1,10 @@
 # Safex Claims
-#### An implementation of kleros arbitrable and evidence compatible contract to create and rule disputes.
+#### Claim resolution platform for Safex using kleros arbitrable and evidence compatible contract.
 #
 ### Deployments
 #### SafexMain Smart Contract is deployed to Ropsten Testnet - [0x69d36535524997af56c2cb28af019d0f997e5044](https://ropsten.etherscan.io/address/0x69d36535524997af56c2cb28af019d0f997e5044)
-#### Access Safex Claims DApp at [SafexClaims](https://devpavan04.github.io/safex-claims/).
 #
-### Run the DApp Locally
+
 #### Install truffle
 ```
 npm install -g truffle
@@ -18,11 +17,8 @@ npm i ganache-cli
 ```
 ganache-cli --port 7545 --quiet
 ```
-#### Open new terminal window and clone this repository
-```
-git clone https://github.com/devpavan04/safex-claims.git
-```
-#### Install dependencies
+
+### Quick start
 ```
 cd safex-claims
 npm install
