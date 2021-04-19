@@ -45,7 +45,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"contract IArbitrator\",\"name\":\"_arbitrator\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"_disputeID\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_ruling\",\"type\":\"uint256\"}],\"name\":\"Ruling\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_disputeID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_ruling\",\"type\":\"uint256\"}],\"name\":\"rule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"Ruling(address,uint256,uint256)\":{\"details\":\"To be raised when a ruling is given.\",\"params\":{\"_arbitrator\":\"The arbitrator giving the ruling.\",\"_disputeID\":\"ID of the dispute in the Arbitrator contract.\",\"_ruling\":\"The ruling which was given.\"}}},\"kind\":\"dev\",\"methods\":{\"rule(uint256,uint256)\":{\"details\":\"Give a ruling for a dispute. Must be called by the arbitrator. The purpose of this function is to ensure that the address calling it has the right to rule on the contract.\",\"params\":{\"_disputeID\":\"ID of the dispute in the Arbitrator contract.\",\"_ruling\":\"Ruling given by the arbitrator. Note that 0 is reserved for \\\"Not able/wanting to make a decision\\\".\"}}},\"title\":\"IArbitrable Arbitrable interface. When developing arbitrable contracts, we need to: - Define the action taken when a ruling is received by the contract. - Allow dispute creation. For this a function must call arbitrator.createDispute{value: _fee}(_choices,_extraData);\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrable.sol\":\"IArbitrable\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrable.sol\":{\"keccak256\":\"0xb2fccb03459b40994919cef72f811487b010fc6b660ee620e5f5b2d271220d99\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4a052ad3dd218d7b53e620e21fb8e5047f2058c4863a01ba0ac01b3a304bf6ad\",\"dweb:/ipfs/QmY4CeDjLM5WVU79UFHhzTUvs7KHgHqie7VL5CuK1W9qW7\"]},\"/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrator.sol\":{\"keccak256\":\"0x99a9ef101ceeb540321da90175dab50bc1379e9acbedadb60a00b11f7cc4afcd\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0188ee0fd1f900a51d53951a809d80bec77dcfe4d3fb060234cbc93e63704dca\",\"dweb:/ipfs/QmV6LRQ1H5yZ25n5iHpfoz9LNHzm4SMHbD9RAvrjoXoXdp\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"contract IArbitrator\",\"name\":\"_arbitrator\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"_disputeID\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_ruling\",\"type\":\"uint256\"}],\"name\":\"Ruling\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_disputeID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_ruling\",\"type\":\"uint256\"}],\"name\":\"rule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"Ruling(address,uint256,uint256)\":{\"details\":\"To be raised when a ruling is given.\",\"params\":{\"_arbitrator\":\"The arbitrator giving the ruling.\",\"_disputeID\":\"ID of the dispute in the Arbitrator contract.\",\"_ruling\":\"The ruling which was given.\"}}},\"kind\":\"dev\",\"methods\":{\"rule(uint256,uint256)\":{\"details\":\"Give a ruling for a dispute. Must be called by the arbitrator. The purpose of this function is to ensure that the address calling it has the right to rule on the contract.\",\"params\":{\"_disputeID\":\"ID of the dispute in the Arbitrator contract.\",\"_ruling\":\"Ruling given by the arbitrator. Note that 0 is reserved for \\\"Not able/wanting to make a decision\\\".\"}}},\"title\":\"IArbitrable Arbitrable interface. When developing arbitrable contracts, we need to: - Define the action taken when a ruling is received by the contract. - Allow dispute creation. For this a function must call arbitrator.createDispute{value: _fee}(_choices,_extraData);\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrable.sol\":\"IArbitrable\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrable.sol\":{\"keccak256\":\"0xb2fccb03459b40994919cef72f811487b010fc6b660ee620e5f5b2d271220d99\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4a052ad3dd218d7b53e620e21fb8e5047f2058c4863a01ba0ac01b3a304bf6ad\",\"dweb:/ipfs/QmY4CeDjLM5WVU79UFHhzTUvs7KHgHqie7VL5CuK1W9qW7\"]},\"/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrator.sol\":{\"keccak256\":\"0x99a9ef101ceeb540321da90175dab50bc1379e9acbedadb60a00b11f7cc4afcd\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0188ee0fd1f900a51d53951a809d80bec77dcfe4d3fb060234cbc93e63704dca\",\"dweb:/ipfs/QmV6LRQ1H5yZ25n5iHpfoz9LNHzm4SMHbD9RAvrjoXoXdp\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -54,9 +54,9 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "/**\n * @authors: [@ferittuncer, @hbarcelos]\n * @reviewers: [@remedcu]\n * @auditors: []\n * @bounties: []\n * @deployments: []\n * SPDX-License-Identifier: MIT\n */\npragma solidity >=0.7;\n\nimport \"./IArbitrator.sol\";\n\n/**\n * @title IArbitrable\n * Arbitrable interface.\n * When developing arbitrable contracts, we need to:\n * - Define the action taken when a ruling is received by the contract.\n * - Allow dispute creation. For this a function must call arbitrator.createDispute{value: _fee}(_choices,_extraData);\n */\ninterface IArbitrable {\n    /**\n     * @dev To be raised when a ruling is given.\n     * @param _arbitrator The arbitrator giving the ruling.\n     * @param _disputeID ID of the dispute in the Arbitrator contract.\n     * @param _ruling The ruling which was given.\n     */\n    event Ruling(\n        IArbitrator indexed _arbitrator,\n        uint256 indexed _disputeID,\n        uint256 _ruling\n    );\n\n    /**\n     * @dev Give a ruling for a dispute. Must be called by the arbitrator.\n     * The purpose of this function is to ensure that the address calling it has the right to rule on the contract.\n     * @param _disputeID ID of the dispute in the Arbitrator contract.\n     * @param _ruling Ruling given by the arbitrator. Note that 0 is reserved for \"Not able/wanting to make a decision\".\n     */\n    function rule(uint256 _disputeID, uint256 _ruling) external;\n}\n",
-  "sourcePath": "/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrable.sol",
+  "sourcePath": "/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrable.sol",
   "ast": {
-    "absolutePath": "/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrable.sol",
+    "absolutePath": "/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrable.sol",
     "exportedSymbols": {
       "IArbitrable": [
         22
@@ -80,7 +80,7 @@
         "src": "160:22:0"
       },
       {
-        "absolutePath": "/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrator.sol",
+        "absolutePath": "/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrator.sol",
         "file": "./IArbitrator.sol",
         "id": 2,
         "nameLocation": "-1:-1:-1",
@@ -319,7 +319,7 @@
     "src": "160:1215:0"
   },
   "legacyAST": {
-    "absolutePath": "/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrable.sol",
+    "absolutePath": "/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrable.sol",
     "exportedSymbols": {
       "IArbitrable": [
         22
@@ -343,7 +343,7 @@
         "src": "160:22:0"
       },
       {
-        "absolutePath": "/home/pavansoratur/GitHub/devpavan04/safex-claims/contracts/IArbitrator.sol",
+        "absolutePath": "/home/pavansoratur/GitHub/joinsafex/safex-claims/contracts/IArbitrator.sol",
         "file": "./IArbitrator.sol",
         "id": 2,
         "nameLocation": "-1:-1:-1",
@@ -587,7 +587,7 @@
   },
   "networks": {},
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-12T09:32:34.166Z",
+  "updatedAt": "2021-04-19T08:39:38.511Z",
   "devdoc": {
     "events": {
       "Ruling(address,uint256,uint256)": {
