@@ -10,13 +10,7 @@ contract SafexMain is IArbitrable, IEvidence {
     uint256 private constant RULING_OPTIONS = 2;
 
     /* Enums */
-    enum ClaimStatus {Active, Passed, Failed}
-
-    enum ClaimResult {
-        refusedToArbitrate,
-        initiateReconstruction,
-        doNotInitiateReconstruction
-    }
+    enum ClaimStatus {Active, Passed, Failed, Refused}
 
     /* Structs */
     struct Plan {
@@ -30,8 +24,9 @@ contract SafexMain is IArbitrable, IEvidence {
     }
 
     struct Claim {
-        address claimedBy;
+        uint256 planId;
         uint256 disputeId;
+        address claimedBy;
         uint256 metaEvidenceId;
         uint256 evidenceGroupId;
         ClaimStatus status;
@@ -41,17 +36,15 @@ contract SafexMain is IArbitrable, IEvidence {
     /* Storage - Public */
     IArbitrator public arbitrator;
 
-    address public safexMainAdmin = msg.sender;
+    address public safexMainAdmin;
 
     uint256 public plansCount = 0;
     uint256 public claimsCount = 0;
     uint256 public metaEvidenceID = 0;
     uint256 public evidenceGroupID = 0;
 
-    mapping(uint256 => Plan) public plans; // starts from 1
-    mapping(uint256 => Claim) public claims; // starts from 0 (because, disputeId starts from 0)
-    mapping(uint256 => bool) public planExists;
-    mapping(address => bool) public hasCreatedPlan;
+    mapping(uint256 => Plan) public plans; // plans[planId] => plan, starts from 1
+    mapping(uint256 => Claim) public claims; // claims[disputeId] => claim, starts from 0 (because, disputeId starts from 0)
 
     /* Storage - Private */
     uint256 private _totalClaimsAllowed = 2;
@@ -73,32 +66,23 @@ contract SafexMain is IArbitrable, IEvidence {
         _;
     }
 
-    /* Events */
-    event CreatePlan(
-        address indexed planCreatedBy,
-        address indexed planInheritor,
-        uint256 indexed metaEvidenceId
-    );
-
-    /* Constructor */
-    constructor(IArbitrator _arbitrator) {
-        arbitrator = _arbitrator;
+    modifier planShouldExist(uint256 _planId) {
+        require(_planId <= plansCount, "Plan does not exist");
+        _;
     }
 
-    /* Functions - External */
-    receive() external payable {}
+    modifier shouldBeValidRuling(uint256 _ruling) {
+        require(_ruling <= RULING_OPTIONS, "Ruling out of bounds!");
+        _;
+    }
 
-    function createPlan(address _inheritor, string calldata _metaEvidence)
-        external
-        payable
-    {
+    modifier planCreationRequisite(
+        address _inheritor,
+        string calldata _metaEvidence
+    ) {
         require(
             msg.value >= arbitrator.arbitrationCost(""),
             "Inadequate fee payment"
-        );
-        require(
-            !hasCreatedPlan[msg.sender],
-            "Sender has already created a plan"
         );
         require(
             bytes(_metaEvidence).length > 0,
@@ -112,7 +96,83 @@ contract SafexMain is IArbitrable, IEvidence {
             msg.sender != _inheritor,
             "Plan creator should not be the inheritor of the plan"
         );
+        _;
+    }
 
+    modifier claimCreationRequisite(
+        uint256 _planId,
+        string calldata _evidence
+    ) {
+        Plan memory plan = plans[_planId];
+
+        require(
+            plan.claimsCount < _totalClaimsAllowed,
+            "Total number of claims on a plan has reached the limit"
+        );
+        require(
+            msg.sender == plan.planInheritor,
+            "Only inheritor of the plan can create the claim"
+        );
+        require(
+            plan.planFunds >= arbitrator.arbitrationCost(""),
+            "Insufficient funds in the plan to pay the arbitration fee"
+        );
+        _;
+    }
+
+    modifier recoverPlanFundsRequisite(uint256 _planId) {
+        Plan memory plan = plans[_planId];
+
+        require(
+            msg.sender == plan.planCurrentOwner,
+            "Only plan owner can recover the deposit balance"
+        );
+        require(plan.planFunds != 0, "No funds remaining in the plan");
+        _;
+    }
+
+    modifier submitEvidenceRequisite(
+        uint256 _disputeID,
+        string calldata _evidence
+    ) {
+        require(_disputeID <= claimsCount, "Claim or Dispute does not exist");
+
+        Claim memory claim = claims[_disputeID];
+
+        require(
+            msg.sender == claim.claimedBy,
+            "Only creator of the claim can submit the evidence"
+        );
+        _;
+    }
+
+    /* Events */
+    event CreatePlan(
+        address indexed planCreatedBy,
+        address indexed planInheritor,
+        uint256 indexed metaEvidenceId
+    );
+
+    event CreateClaim(
+        address indexed claimCreatedBy,
+        uint256 indexed planId,
+        uint256 indexed disputeId
+    );
+
+    /* Constructor */
+    constructor(IArbitrator _arbitrator) {
+        arbitrator = _arbitrator;
+        safexMainAdmin = msg.sender;
+    }
+
+    /* Functions - External */
+    receive() external payable {}
+
+    function createPlan(address _inheritor, string calldata _metaEvidence)
+        external
+        payable
+        planCreationRequisite(_inheritor, _metaEvidence)
+    {
         plansCount += 1;
         metaEvidenceID += 1;
 
@@ -134,31 +194,15 @@ contract SafexMain is IArbitrable, IEvidence {
 
         emit MetaEvidence(metaEvidenceID, _metaEvidence);
         emit CreatePlan(msg.sender, _inheritor, metaEvidenceID);
-
-        hasCreatedPlan[msg.sender] = true;
-        planExists[plansCount] = true;
     }
 
     function createClaim(uint256 _planId, string calldata _evidence)
         external
         payable
+        planShouldExist(_planId)
+        claimCreationRequisite(_planId, _evidence)
     {
-        require(planExists[_planId], "Plan does not exist");
-
         Plan memory plan = plans[_planId];
-
-        require(
-            plan.claimsCount < _totalClaimsAllowed,
-            "Total number of claims on a plan has reached the limit"
-        );
-        require(
-            msg.sender == plan.planInheritor,
-            "Only inheritor of the plan can create the claim"
-        );
-        require(
-            plan.planFunds >= arbitrator.arbitrationCost(""),
-            "Insufficient funds in the plan to pay the arbitration fee"
-        );
 
         uint256 disputeID =
             arbitrator.createDispute{value: arbitrator.arbitrationCost("")}(
@@ -177,16 +221,19 @@ contract SafexMain is IArbitrable, IEvidence {
 
         Claim memory claim = claims[disputeID];
         claim = Claim({
-            claimedBy: msg.sender,
+            planId: _planId,
             disputeId: disputeID,
+            claimedBy: msg.sender,
             metaEvidenceId: plan.metaEvidenceId,
             evidenceGroupId: evidenceGroupID,
             status: ClaimStatus.Active,
-            result: ""
+            result: "Active"
         });
         claims[disputeID] = claim;
 
         claimsCount += 1;
+
+        emit CreateClaim(msg.sender, _planId, disputeID);
 
         plan.claimsCount += 1;
         plan.planFunds -= arbitrator.arbitrationCost("");
@@ -201,23 +248,19 @@ contract SafexMain is IArbitrable, IEvidence {
         external
         override
         onlyArbitrator
+        shouldBeValidRuling(_ruling)
     {
-        require(_ruling <= RULING_OPTIONS, "Ruling out of bounds!");
-
         Claim memory claim = claims[_disputeID];
 
-        require(claim.status == ClaimStatus.Active, "Claim already resolved");
-
-        if (_ruling == uint256(ClaimResult.initiateReconstruction)) {
-            claim.status = ClaimStatus.Passed;
-            claim.result = "Initiate reconstruction";
-        } else if (
-            _ruling == uint256(ClaimResult.doNotInitiateReconstruction)
-        ) {
-            claim.status = ClaimStatus.Failed;
-            claim.result = "Do not initiate reconstruction";
-        } else if (_ruling == uint256(ClaimResult.refusedToArbitrate)) {
-            claim.result = "Refused to arbitrate";
+        if (_ruling == 1) {
+            claim.status = ClaimStatus.Passed; // 1
+            claim.result = "Passed";
+        } else if (_ruling == 2) {
+            claim.status = ClaimStatus.Failed; // 2
+            claim.result = "Failed";
+        } else if (_ruling == 0) {
+            claim.status = ClaimStatus.Refused; // 3
+            claim.result = "RTA"; // Refused To Arbitrate (RTA)
         }
 
         claims[_disputeID] = claim;
@@ -225,9 +268,11 @@ contract SafexMain is IArbitrable, IEvidence {
         emit Ruling(IArbitrator(msg.sender), _disputeID, _ruling);
     }
 
-    function depositPlanFunds(uint256 _planId) external payable {
-        require(planExists[_planId], "Plan does not exist");
-
+    function depositPlanFunds(uint256 _planId)
+        external
+        payable
+        planShouldExist(_planId)
+    {
         Plan memory plan = plans[_planId];
         plan.planFunds += msg.value;
         plans[_planId] = plan;
@@ -237,16 +282,12 @@ contract SafexMain is IArbitrable, IEvidence {
         require(sent, "Failed to send Ether");
     }
 
-    function recoverPlanFunds(uint256 _planId) external {
-        require(planExists[_planId], "Plan does not exist");
-
+    function recoverPlanFunds(uint256 _planId)
+        external
+        planShouldExist(_planId)
+        recoverPlanFundsRequisite(_planId)
+    {
         Plan memory plan = plans[_planId];
-
-        require(
-            msg.sender == plan.planCurrentOwner,
-            "Only plan owner can recover the deposit balance"
-        );
-        require(plan.planFunds != 0, "No funds remaining in the plan");
 
         uint256 blanceAmount = plan.planFunds;
 
@@ -262,25 +303,19 @@ contract SafexMain is IArbitrable, IEvidence {
     /* Functions - Public */
     function submitEvidence(uint256 _disputeID, string calldata _evidence)
         public
+        submitEvidenceRequisite(_disputeID, _evidence)
     {
-        require(_disputeID <= claimsCount, "Claim or Dispute does not exist");
-
         Claim memory claim = claims[_disputeID];
-
-        require(
-            msg.sender == claim.claimedBy,
-            "Only creator of the claim can submit the evidence"
-        );
 
         emit Evidence(arbitrator, claim.evidenceGroupId, msg.sender, _evidence);
     }
 
     /* Setters */
-    function setTotalClaimsAllowed(uint256 _newTotalClaimsAllowed)
-        external
+    function setTotalClaimsAllowed(uint256 _claimsAllowed)
+        public
         onlySafexMainAdmin
     {
-        _totalClaimsAllowed = _newTotalClaimsAllowed;
+        _totalClaimsAllowed = _claimsAllowed;
     }
 
     /* Getters */
