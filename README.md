@@ -1,45 +1,62 @@
 # Safex Claims
 #### Claim resolution platform for Safex using kleros arbitrable and evidence compatible contract.
-#
-### Deployments
-#### SafexMain Smart Contract is deployed to Ropsten Testnet - [0x69d36535524997af56c2cb28af019d0f997e5044](https://ropsten.etherscan.io/address/0x69d36535524997af56c2cb28af019d0f997e5044)
-#
-
-#### Install truffle
 ```
-npm install -g truffle
+git clone https://github.com/getsafex/safex-claims.git
 ```
-#### Install ganache-cli
-```
-npm i ganache-cli
-```
-#### Run ganache-cli
-```
-ganache-cli --port 7545 --quiet
-```
-
-### Quick start
+Install hardhat dependencies
 ```
 cd safex-claims
 npm install
+```
+Install react dependencies
+```
 cd client
 npm install
 ```
-#### Compile smart contract
-```
-cd ..
-truffle compile
-```
-#### Deploy smart contract to ganache
-```
-truffle migrate
-```
-#### Test smart contract
-```
-truffle test
-```
-#### Start DApp
-```
-npm start
-```
-#### Open metamask browser wallet and select network to Localhost 7545.
+Hardhat flow :
+* cd back into root folder
+  ```
+  cd ..
+  ```
+* Compile
+  ```
+  npm run compile
+  ```
+* Deployments and tests :
+  * Hardhat Network
+    * Deploy - no need to deploy
+    * Test
+      * change defaultNetwork to "hardhat" in hardhat.config.js file
+        ```
+        npm run test
+        ```
+  * Localhost
+    * Deploy
+      * change defaultNetwork to "localhost" in hardhat.config.js file
+        * run a local JsonRpcProvider (chain) at localhost:8545
+          ```
+          npm run chain
+          ```
+        * open new terminal
+        * deploy contract
+          ```
+          npm run deploy
+          ```
+    * Test
+      ```
+      npm run test
+      ```
+  * Testnet
+    * Deploy
+      * change defaultNetwork to required testnet in hardhat.config.js file, ex: "kovan", "ropsten"
+      * change INFURA_API_KEY to your infura api key
+      * change TESTNET_ACCOUNT_PRIVATE_KEY to your testnet's account's  private key
+      * deploy contract
+        ```
+        npm run deploy
+        ```
+* Publish artifacts to the frontend
+  ```
+  npm run publish
+  ```
+  * access artifacts from ./subgraph folder and ./client/src/contracts folder
