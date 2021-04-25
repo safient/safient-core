@@ -4,7 +4,7 @@ const chalk = require("chalk");
 
 require("@nomiclabs/hardhat-waffle");
 
-const defaultNetwork = "localhost"; // "hardhat" for tests
+const defaultNetwork = "hardhat"; // "hardhat" for tests
 const INFURA_API_KEY = "ffffffffffffffffffffffffffffffff";
 const TESTNET_ACCOUNT_PRIVATE_KEY = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
@@ -33,6 +33,15 @@ module.exports = {
   },
   solidity: {
     compilers: [
+      {
+        version: "0.4.26",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
       {
         version: "0.7.0",
         settings: {

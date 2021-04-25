@@ -26,5 +26,8 @@
     "hardhat": "^2.2.0",
     "prettier-plugin-solidity": "*",
     "ramda": "^0.27.1"
+  },
+  "devDependencies": {
+    "chalk": "^4.1.1"
   }
 }
