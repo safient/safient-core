@@ -4,7 +4,7 @@ const chalk = require("chalk");
 
 require("@nomiclabs/hardhat-waffle");
 
-const defaultNetwork = "hardhat"; // "hardhat" for tests
+const defaultNetwork = "localhost"; // "hardhat" for tests
 const INFURA_API_KEY = "ffffffffffffffffffffffffffffffff";
 const TESTNET_ACCOUNT_PRIVATE_KEY = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
