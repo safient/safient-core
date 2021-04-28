@@ -4,18 +4,16 @@ const fs = require("fs");
 const R = require("ramda");
 const chalk = require("chalk");
 
-/* ------ UTILS ------- */
+// UTILS
 const abiEncodeArgs = (deployed, contractArgs) => {
-  // abi encodes contract arguments
-  // not writing abi encoded args if this does not pass
-  if (!contractArgs || !deployed || !R.hasPath(["interface", "deploy"], deployed)) {
-    return "";
-  }
+  if (!contractArgs || !deployed || !R.hasPath(["interface", "deploy"], deployed)) return "";
+
   const encoded = utils.defaultAbiCoder.encode(deployed.interface.deploy.inputs, contractArgs);
+
   return encoded;
 };
 
-/* ------ DEPLOY ------- */
+// DEPLOY
 const deploy = async (contractName, _args = [], overrides = {}, libraries = {}) => {
   console.log(` 🛰  Deploying: ${contractName}`);
 
@@ -23,11 +21,14 @@ const deploy = async (contractName, _args = [], overrides = {}, libraries = {}) 
   const contractArtifacts = await hre.ethers.getContractFactory(contractName, { libraries: libraries });
   const deployed = await contractArtifacts.deploy(...contractArgs, overrides);
   const encoded = abiEncodeArgs(deployed, contractArgs);
+
   fs.writeFileSync(`artifacts/${contractName}.address`, deployed.address);
 
   let extraGasInfo = "";
+
   if (deployed && deployed.deployTransaction) {
     const gasUsed = deployed.deployTransaction.gasLimit.mul(deployed.deployTransaction.gasPrice);
+
     extraGasInfo = `${utils.formatEther(gasUsed)} ETH, tx hash ${deployed.deployTransaction.hash}`;
   }
 
@@ -43,12 +44,13 @@ const deploy = async (contractName, _args = [], overrides = {}, libraries = {}) 
   }
 
   if (!encoded || encoded.length <= 2) return deployed;
+
   fs.writeFileSync(`artifacts/${contractName}.args`, encoded.slice(2));
 
   return deployed;
 };
 
-/* ------ MAIN (specify contract deployments here) ------- */
+// MAIN (specify contract deployments here)
 async function main() {
   console.log(" 📡 Deploying...\n");
 

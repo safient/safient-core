@@ -81,6 +81,7 @@ async function main() {
   fs.readdirSync(hre.config.paths.sources).forEach((file) => {
     if (file.indexOf(".sol") >= 0) {
       const contractName = file.replace(".sol", "");
+
       if (publishContract(contractName)) {
         finalContractList.push(contractName);
       }
