@@ -1,29 +1,34 @@
 {
-  "name": "dapp-starter-kit",
+  "name": "safex-claims",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "dependencies": {
-    "babel-polyfill": "6.26.0",
-    "babel-preset-env": "1.7.0",
-    "babel-preset-es2015": "6.24.1",
-    "babel-preset-stage-2": "6.24.1",
-    "babel-preset-stage-3": "6.24.1",
-    "babel-register": "6.26.0",
-    "chai": "4.2.0",
-    "chai-as-promised": "7.1.1",
-    "chai-bignumber": "3.0.0",
-    "truffle": "5.2.6",
-    "web3": "1.3.0"
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prettier": "prettier --write 'contracts/**/*.sol'"
+    "prettier": "prettier --write 'contracts/**/*.sol'",
+    "clean": "hardhat clean",
+    "compile": "hardhat compile",
+    "chain": "hardhat node",
+    "test": "hardhat test --network hardhat",
+    "deploy": "hardhat run scripts/deploy.js && hardhat run scripts/publish.js",
+    "generate": "hardhat generate",
+    "account": "hardhat account"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "prettier-plugin-solidity": "*"
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "bip39": "2.5.0",
+    "chai": "^4.3.4",
+    "chalk": "^4.1.1",
+    "dotenv": "^8.2.0",
+    "ethereum-waffle": "^3.3.0",
+    "ethereumjs-wallet": "0.6.5",
+    "ethers": "^5.1.3",
+    "hardhat": "^2.2.0",
+    "prettier-plugin-solidity": "*",
+    "qrcode-terminal": "^0.12.0",
+    "ramda": "^0.27.1"
   }
 }

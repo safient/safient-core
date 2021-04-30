@@ -1,45 +1,25 @@
 # Safex Claims
 #### Claim resolution platform for Safex using kleros arbitrable and evidence compatible contract.
-#
-### Deployments
-#### SafexMain Smart Contract is deployed to Ropsten Testnet - [0x69d36535524997af56c2cb28af019d0f997e5044](https://ropsten.etherscan.io/address/0x69d36535524997af56c2cb28af019d0f997e5044)
-#
+## quickstart
 
-#### Install truffle
-```
-npm install -g truffle
-```
-#### Install ganache-cli
-```
-npm i ganache-cli
-```
-#### Run ganache-cli
-```
-ganache-cli --port 7545 --quiet
-```
+```bash
+git clone https://github.com/getsafex/safex-claims.git
 
-### Quick start
-```
 cd safex-claims
+```
+```bash
 npm install
-cd client
-npm install
 ```
-#### Compile smart contract
+> in a second terminal window:
+
+```bash
+npm run chain
 ```
-cd ..
-truffle compile
+
+> in a third terminal window:
+
+```bash
+npm run deploy
 ```
-#### Deploy smart contract to ganache
-```
-truffle migrate
-```
-#### Test smart contract
-```
-truffle test
-```
-#### Start DApp
-```
-npm start
-```
-#### Open metamask browser wallet and select network to Localhost 7545.
+🔏 Smart contract is located at `/contracts`
+📝 Access artifacts from /subgraph and /client/src/contracts folders
