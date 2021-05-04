@@ -1,13 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { utils } from "ethers";
 
-export default function MyAccount({ accountAddress, accountBalance }) {
+function MyAccount({ address, balance }) {
   return (
-    <div className="p-4 pt-4">
-      <p className="lead">Account address :</p>
-      <h5>{accountAddress}</h5>
-      <hr className="my-4" />
-      <p className="lead">Account balance :</p>
-      <h5>{accountBalance} ETH</h5>
+    <div>
+      <h3>My Account</h3>
+      <h4>{address}</h4>
+      <h4>{utils.formatEther(balance)} ETH</h4>
     </div>
   );
 }
+
+export default MyAccount;

@@ -1,159 +1,29 @@
-import React, { Component } from "react";
-import Archon from "@kleros/archon";
+import React, { useEffect, useState } from "react";
 
-const archon = new Archon("https://ropsten.infura.io/v3/2138913d0e324125bf671fafd93e186c", "https://ipfs.kleros.io");
+function Claims({ writeContracts }) {
+  const [claims, setClaims] = useState([]);
 
-export default class Claims extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      myClaims: [],
-    };
-  }
+  useEffect(async () => {
+    try {
+      const claimsCount = await writeContracts.SafexMain.claimsCount();
 
-  componentDidMount = async () => {
-    const myClaims = this.props.claims.filter((claim) => claim.claimedBy === this.props.accountAddress);
-    this.setState({ myClaims });
-    const evidence = await archon.arbitrable.getEvidence(
-      this.props.safexMainContractAddress,
-      this.props.arbitratorContractAddress,
-      2
-    );
-    console.log(evidence);
-  };
+      let allClaims = [];
+      for (let i = 0; i < claimsCount; i++) {
+        const claim = await writeContracts.SafexMain.claims(i);
+        allClaims.push(claim);
+      }
+      setClaims(allClaims);
+    } catch (e) {
+      console.log(e);
+    }
+  }, [writeContracts]);
 
-  render() {
-    return (
-      <div className="pt-4">
-        <div className="accordion">
-          <div className="card bg-secondary">
-            <h5 className="card-header bg-dark">
-              <a
-                href="#collapse1"
-                data-parent="#accordion"
-                data-toggle="collapse"
-                className="text-decoration-none text-white"
-              >
-                My Claim
-              </a>
-            </h5>
-            <div id="collapse1" className="collapse show">
-              {this.state.myClaims.length !== 0 ? (
-                <>
-                  {this.state.myClaims.map((claim) => {
-                    return (
-                      <div className="card-body" key={claim.disputeId}>
-                        <div className="row">
-                          <div className="col-6">
-                            <p>Plan Id :</p>
-                            <h5>{claim.planId}</h5>
-                          </div>
-                          <div className="col-6">
-                            <p>Claimed By :</p>
-                            <h5>{claim.claimedBy}</h5>
-                          </div>
-                        </div>
-                        <hr className="my-2" />
-                        <div className="row">
-                          <div className="col-6">
-                            <p>Dispute Id :</p>
-                            <h5>{claim.disputeId}</h5>
-                          </div>
-                          <div className="col-6">
-                            <p>Metaevidence Id :</p>
-                            <h5>{claim.metaEvidenceId}</h5>
-                          </div>
-                        </div>
-                        <hr className="my-2" />
-                        <div className="row">
-                          <div className="col-6">
-                            <p>Evidence Group Id :</p>
-                            <h5>{claim.evidenceGroupId}</h5>
-                          </div>
-                          <div className="col-6">
-                            <p>Status :</p>
-                            <h5
-                              className={
-                                (claim.result === "Active" && "bg-warning") ||
-                                (claim.result === "Passed" && "bg-success") ||
-                                (claim.result === "Failed" && "bg-danger")
-                              }
-                              style={{ width: "max-content", color: "#fff", padding: "0.6rem 1rem" }}
-                            >
-                              {claim.result}
-                            </h5>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </>
-              ) : (
-                <div className="pl-3 pt-3">
-                  <p className="lead">You don't have any active claims</p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="card bg-secondary">
-            <h5 className="card-header bg-dark">
-              <a
-                href="#collapse2"
-                data-parent="#accordion"
-                data-toggle="collapse"
-                className="text-decoration-none text-white"
-              >
-                All Claims
-              </a>
-            </h5>
-            <div id="collapse2" className="collapse show">
-              {this.props.claims.length !== 0 ? (
-                <table className="table text-center">
-                  <thead>
-                    <tr>
-                      <th scope="col">Plan Id</th>
-                      <th scope="col">Claimed By</th>
-                      <th scope="col">Dispute Id</th>
-                      <th scope="col">MetaEvidence Id</th>
-                      <th scope="col">Evidence Group Id</th>
-                      <th scope="col">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-weight-bold">
-                    {this.props.claims.map((claim) => {
-                      return (
-                        <tr key={claim.disputeId}>
-                          <th scope="row">{claim.planId}</th>
-                          <td>
-                            {claim.claimedBy.substr(0, 6) + "...." + claim.claimedBy.slice(claim.claimedBy.length - 6)}
-                          </td>
-                          <td>{claim.disputeId}</td>
-                          <td>{claim.metaEvidenceId}</td>
-                          <td>{claim.evidenceGroupId}</td>
-                          <td
-                            className={
-                              (claim.result === "Active" && "bg-warning") ||
-                              (claim.result === "Passed" && "bg-success") ||
-                              (claim.result === "Failed" && "bg-danger")
-                            }
-                            style={{ color: "#fff", padding: "" }}
-                          >
-                            {claim.result}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="pl-3 pt-3">
-                  <p className="lead">No claims have been created</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <h3>Claims</h3>
+      {claims.forEach((claim) => console.log(claim))}
+    </div>
+  );
 }
+
+export default Claims;

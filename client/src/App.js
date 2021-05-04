@@ -1,261 +1,131 @@
-import React, { Component } from "react";
-import { HashRouter, Route } from "react-router-dom";
-import Web3 from "web3";
-
-import AutoAppealableArbitrator from "./contracts/AutoAppealableArbitrator.json";
-import SafexMain from "./contracts/SafexMain.json";
+import React, { useCallback, useEffect, useState } from "react";
+import { StaticJsonRpcProvider, JsonRpcProvider, Web3Provider } from "@ethersproject/providers";
+import Web3Modal from "web3modal";
+import WalletConnectProvider from "@walletconnect/web3-provider";
+import { useUserAddress } from "eth-hooks";
+import { useUserProvider, useContractLoader, useBalance } from "./hooks";
+import { INFURA_ID, NETWORKS } from "./constants";
+import { Text, Page, Tabs, Row, Col, Spacer } from "@geist-ui/react";
 
 import ContractsNotDeployed from "./components/ContractsNotDeployed/ContractsNotDeployed";
-import ConnectToMetamask from "./components/ConnectToMetamask/ConnectToMetamask";
+import ConnectWeb3Modal from "./components/ConnectWeb3Modal/ConnectWeb3Modal";
 import SafexMainDetails from "./components/SafexMainDetails/SafexMainDetails";
 import SubmitEvidence from "./components/SubmitEvidence/SubmitEvidence";
 import CreateClaim from "./components/CreateClaim/CreateClaim";
 import CreatePlan from "./components/CreatePlan/CreatePlan";
 import MyAccount from "./components/MyAccount/MyAccount";
-import Navbar from "./components/Navbar/Navbar";
-import Loader from "./components/Loader/Loader";
 import Claims from "./components/Claims/Claims";
-import Plans from "./components/Plans/Plans";
 import Funds from "./components/Funds/Funds";
+import Plans from "./components/Plans/Plans";
 
-export default class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      accountAddress: "",
-      accountBalance: "",
-      plansCount: 0,
-      claimsCount: 0,
-      plans: [],
-      claims: [],
-      loading: true,
-      safexMainContract: null,
-      arbitratorContract: null,
-      safexMainContractAddress: "",
-      arbitratorContractAddress: "",
-      metamaskConnected: false,
-      contractsDetected: false,
-    };
-  }
+const targetNetwork = NETWORKS["localhost"];
+const localProviderUrl = targetNetwork.rpcUrl;
+const localProviderUrlFromEnv = process.env.REACT_APP_PROVIDER ? process.env.REACT_APP_PROVIDER : localProviderUrl;
+const localProvider = new StaticJsonRpcProvider(localProviderUrlFromEnv);
 
-  componentWillMount = async () => {
-    await this.loadWeb3();
-    await this.loadBlockchainData();
-  };
+function App() {
+  const [injectedProvider, setInjectedProvider] = useState();
 
-  loadWeb3 = async () => {
-    if (window.ethereum) {
-      window.web3 = new Web3(window.ethereum);
-    } else if (window.web3) {
-      window.web3 = new Web3(window.web3.currentProvider);
-    } else {
-      window.alert("Non-Ethereum browser detected. You should consider trying MetaMask!");
-    }
-  };
+  const userProvider = useUserProvider(injectedProvider, localProvider);
+  const address = useUserAddress(userProvider);
+  const balance = useBalance(userProvider, address);
+  const localChainId = localProvider && localProvider._network && localProvider._network.chainId;
+  const selectedChainId = userProvider && userProvider._network && userProvider._network.chainId;
+  const writeContracts = useContractLoader(userProvider);
 
-  loadBlockchainData = async () => {
-    const web3 = window.web3;
-    const accounts = await web3.eth.getAccounts();
-    if (accounts.length === 0) {
-      this.setState({ metamaskConnected: false });
-    } else {
-      this.setState({ metamaskConnected: true });
-      this.setState({ loading: true });
-      this.setState({ accountAddress: accounts[0] });
-      let accountBalance = await web3.eth.getBalance(accounts[0]);
-      accountBalance = web3.utils.fromWei(accountBalance, "Ether");
-      this.setState({ accountBalance });
-      this.setState({ loading: false });
-      const networkId = await web3.eth.net.getId();
-      const networkDataSafexMain = SafexMain.networks[networkId];
-      const networkDataArbitrator = AutoAppealableArbitrator.networks[networkId];
-      if (networkDataSafexMain && networkDataArbitrator) {
-        this.setState({ loading: true });
-        this.setState({ safexMainContractAddress: networkDataSafexMain.address });
-        this.setState({ arbitratorContractAddress: networkDataArbitrator.address });
-        const safexMainContract = new web3.eth.Contract(SafexMain.abi, networkDataSafexMain.address);
-        const arbitratorContract = new web3.eth.Contract(AutoAppealableArbitrator.abi, networkDataArbitrator.address);
-        this.setState({ safexMainContract });
-        this.setState({ arbitratorContract });
-        this.setState({ contractsDetected: true });
-        const plansCount = await safexMainContract.methods.plansCount().call();
-        const claimsCount = await safexMainContract.methods.claimsCount().call();
-        this.setState({ plansCount });
-        this.setState({ claimsCount });
-        for (let i = 1; i <= plansCount; i++) {
-          const plan = await safexMainContract.methods.plans(i).call();
-          this.setState({
-            plans: [...this.state.plans, plan],
-          });
-        }
-        for (let i = 0; i < claimsCount; i++) {
-          const claim = await safexMainContract.methods.claims(i).call();
-          this.setState({
-            claims: [...this.state.claims, claim],
-          });
-        }
-        this.setState({ loading: false });
-      } else {
-        this.setState({ contractsDetected: false });
-      }
-    }
-  };
+  const loadWeb3Modal = useCallback(async () => {
+    const provider = await web3Modal.connect();
+    setInjectedProvider(new Web3Provider(provider));
+  }, [setInjectedProvider]);
 
-  connectToMetamask = async () => {
-    await window.ethereum.enable();
-    this.setState({ metamaskConnected: true });
-    window.location.reload();
-  };
+  useEffect(() => {
+    if (web3Modal.cachedProvider) loadWeb3Modal();
+  }, [loadWeb3Modal]);
 
-  setLoadingToTrue = () => {
-    this.setState({ loading: true });
-  };
-
-  setLoadingToFalse = () => {
-    this.setState({ loading: false });
-  };
-
-  createPlan = async (_inheritor, _metaEvidence, _totalPrice) => {
-    this.state.safexMainContract.methods
-      .createPlan(_inheritor, _metaEvidence)
-      .send({ from: this.state.accountAddress, value: _totalPrice })
-      .on("confirmation", () => {
-        this.setState({ loading: false });
-        window.location.reload();
-      });
-  };
-
-  createClaim = async (_planId, _evidence) => {
-    this.state.safexMainContract.methods
-      .createClaim(_planId, _evidence)
-      .send({ from: this.state.accountAddress })
-      .on("confirmation", () => {
-        this.setState({ loading: false });
-        window.location.reload();
-      });
-  };
-
-  submitEvidence = async (_disputeId, _evidence) => {
-    this.state.safexMainContract.methods
-      .submitEvidence(_disputeId, _evidence)
-      .send({ from: this.state.accountAddress })
-      .on("confirmation", () => {
-        this.setState({ loading: false });
-        window.location.reload();
-      });
-  };
-
-  recoverPlanFunds = async (_planId) => {
-    this.state.safexMainContract.methods
-      .recoverPlanFunds(_planId)
-      .send({ from: this.state.accountAddress })
-      .on("confirmation", () => {
-        this.setState({ loading: false });
-        window.location.reload();
-      });
-  };
-
-  depositPlanFunds = async (_planId, _depositAmount) => {
-    this.state.safexMainContract.methods
-      .depositPlanFunds(_planId)
-      .send({ from: this.state.accountAddress, value: _depositAmount })
-      .on("confirmation", () => {
-        this.setState({ loading: false });
-        window.location.reload();
-      });
-  };
-
-  render() {
-    return (
-      <div className="container">
-        {!this.state.metamaskConnected ? (
-          <ConnectToMetamask connectToMetamask={this.connectToMetamask} />
-        ) : !this.state.contractsDetected ? (
-          <ContractsNotDeployed />
-        ) : this.state.loading ? (
-          <Loader />
-        ) : (
-          <>
-            <HashRouter basename="/">
-              <Navbar />
-              <Route
-                path="/"
-                exact
-                render={() => (
-                  <SafexMainDetails
-                    safexMainContractAddress={this.state.safexMainContractAddress}
-                    arbitratorContractAddress={this.state.arbitratorContractAddress}
-                    plansCount={this.state.plansCount}
-                    claimsCount={this.state.claimsCount}
-                    safexMainContract={this.state.safexMainContract}
-                  />
-                )}
-              />
-              <Route
-                path="/my-account"
-                render={() => (
-                  <MyAccount accountAddress={this.state.accountAddress} accountBalance={this.state.accountBalance} />
-                )}
-              />
-              <Route
-                path="/create-plan"
-                render={() => (
-                  <CreatePlan
-                    arbitratorContractAddress={this.state.arbitratorContractAddress}
-                    safexMainContractAddress={this.state.safexMainContractAddress}
-                    safexMainContract={this.state.safexMainContract}
-                    accountAddress={this.state.accountAddress}
-                    setLoadingToTrue={this.setLoadingToTrue}
-                    createPlan={this.createPlan}
-                  />
-                )}
-              />
-              <Route
-                path="/create-claim"
-                render={() => (
-                  <CreateClaim
-                    arbitratorContractAddress={this.state.arbitratorContractAddress}
-                    setLoadingToTrue={this.setLoadingToTrue}
-                    createClaim={this.createClaim}
-                  />
-                )}
-              />
-              <Route
-                path="/submit-evidence"
-                render={() => (
-                  <SubmitEvidence setLoadingToTrue={this.setLoadingToTrue} submitEvidence={this.submitEvidence} />
-                )}
-              />
-              <Route
-                path="/funds"
-                render={() => (
-                  <Funds
-                    setLoadingToTrue={this.setLoadingToTrue}
-                    plansCount={this.state.plansCount}
-                    recoverPlanFunds={this.recoverPlanFunds}
-                    depositPlanFunds={this.depositPlanFunds}
-                  />
-                )}
-              />
-              <Route
-                path="/plans"
-                render={() => <Plans accountAddress={this.state.accountAddress} plans={this.state.plans} />}
-              />
-              <Route
-                path="/claims"
-                render={() => (
-                  <Claims
-                    accountAddress={this.state.accountAddress}
-                    claims={this.state.claims}
-                    safexMainContractAddress={this.state.safexMainContractAddress}
-                    arbitratorContractAddress={this.state.arbitratorContractAddress}
-                  />
-                )}
-              />
-            </HashRouter>
-          </>
-        )}
-      </div>
-    );
-  }
+  return (
+    <Page size="large">
+      <Row align="middle">
+        <Col span={20}>
+          <Page.Header>
+            <Text h2>Safex Claims</Text>
+          </Page.Header>
+        </Col>
+        <Col span={4}>
+          <ConnectWeb3Modal web3Modal={web3Modal} loadWeb3Modal={loadWeb3Modal} logoutOfWeb3Modal={logoutOfWeb3Modal} />
+        </Col>
+      </Row>
+      {localChainId && selectedChainId && localChainId != selectedChainId ? (
+        <ContractsNotDeployed localChainId={localChainId} selectedChainId={selectedChainId} />
+      ) : (
+        <>
+          <Spacer y={1} />
+          <Tabs initialValue="1">
+            <Spacer y={1} />
+            <Tabs.Item label="safex" value="1">
+              <SafexMainDetails writeContracts={writeContracts} />
+            </Tabs.Item>
+            <Tabs.Item label="account" value="2">
+              <MyAccount address={address} balance={balance} />
+            </Tabs.Item>
+            <Tabs.Item label="create plan" value="3">
+              <CreatePlan address={address} writeContracts={writeContracts} />
+            </Tabs.Item>
+            <Tabs.Item label="create claim" value="4">
+              <CreateClaim />
+            </Tabs.Item>
+            <Tabs.Item label="submit evidence" value="5">
+              <SubmitEvidence />
+            </Tabs.Item>
+            <Tabs.Item label="funds" value="6">
+              <Funds />
+            </Tabs.Item>
+            <Tabs.Item label="plans" value="7">
+              <Plans writeContracts={writeContracts} />
+            </Tabs.Item>
+            <Tabs.Item label="claims" value="8">
+              <Claims writeContracts={writeContracts} />
+            </Tabs.Item>
+          </Tabs>
+        </>
+      )}
+    </Page>
+  );
 }
+
+const web3Modal = new Web3Modal({
+  cacheProvider: true,
+  providerOptions: {
+    walletconnect: {
+      package: WalletConnectProvider,
+      options: {
+        infuraId: INFURA_ID,
+      },
+    },
+  },
+  theme: "dark",
+});
+
+const logoutOfWeb3Modal = async () => {
+  await web3Modal.clearCachedProvider();
+  setTimeout(() => {
+    window.location.reload();
+  }, 1);
+};
+
+window.ethereum &&
+  window.ethereum.on("chainChanged", (chainId) => {
+    web3Modal.cachedProvider &&
+      setTimeout(() => {
+        window.location.reload();
+      }, 1);
+  });
+
+window.ethereum &&
+  window.ethereum.on("accountsChanged", (accounts) => {
+    web3Modal.cachedProvider &&
+      setTimeout(() => {
+        window.location.reload();
+      }, 1);
+  });
+
+export default App;

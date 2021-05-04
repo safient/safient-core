@@ -1,46 +1,47 @@
-import React, { Component } from "react";
-import Web3 from "web3";
+import React, { useEffect, useState } from "react";
+import { utils } from "ethers";
 
-const web3 = new Web3();
+function SafexMainDetails({ writeContracts }) {
+  const [arbitratorContractAddress, setArbitratorContractAddress] = useState("");
+  const [safexMainContractAddress, setSafexMainContractAddress] = useState("");
+  const [safexMainBalance, setSafexMainBalance] = useState(0);
+  const [plansCount, setPlansCount] = useState(0);
+  const [claimsCount, setClaimsCount] = useState(0);
+  const [claimsAllowed, setClaimsAllowed] = useState(0);
 
-export default class SafexMainDetails extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      safexMainBalanceEth: 0,
-      claimsAllowed: 0,
-    };
-  }
+  useEffect(async () => {
+    try {
+      setArbitratorContractAddress(writeContracts.AutoAppealableArbitrator.address);
 
-  componentDidMount = async () => {
-    const safexMainBalanceWei = await this.props.safexMainContract.methods.getSafexMainContractBalance().call();
-    const safexMainBalanceEth = web3.utils.fromWei(safexMainBalanceWei, "ether");
-    this.setState({ safexMainBalanceEth });
-    const claimsAllowed = await this.props.safexMainContract.methods.getTotalClaimsAllowed().call();
-    this.setState({ claimsAllowed });
-  };
+      setSafexMainContractAddress(writeContracts.SafexMain.address);
 
-  render() {
-    return (
-      <div className="p-4 pt-4">
-        <p className="lead">AutoAppealableArbitrator contract address :</p>
-        <h5>{this.props.arbitratorContractAddress}</h5>
-        <hr className="my-4" />
-        <p className="lead">SafexMain contract address :</p>
-        <h5>{this.props.safexMainContractAddress}</h5>
-        <hr className="my-4" />
-        <p className="lead">SafexMain balance :</p>
-        <h5>{this.state.safexMainBalanceEth} ETH</h5>
-        <hr className="my-4" />
-        <p className="lead">No. of plans :</p>
-        <h5>{this.props.plansCount}</h5>
-        <hr className="my-4" />
-        <p className="lead">No. of claims :</p>
-        <h5>{this.props.claimsCount}</h5>
-        <hr className="my-4" />
-        <p className="lead">No. of claims allowed on a plan :</p>
-        <h5>{this.state.claimsAllowed}</h5>
-      </div>
-    );
-  }
+      const balance = await writeContracts.SafexMain.getSafexMainContractBalance();
+      setSafexMainBalance(utils.formatEther(balance));
+
+      const plansCount = await writeContracts.SafexMain.plansCount();
+      setPlansCount(Number(plansCount));
+
+      const claimsCount = await writeContracts.SafexMain.claimsCount();
+      setClaimsCount(Number(claimsCount));
+
+      const claimsAllowed = await writeContracts.SafexMain.getTotalClaimsAllowed();
+      setClaimsAllowed(Number(claimsAllowed));
+    } catch (e) {
+      console.log(e);
+    }
+  }, [writeContracts]);
+
+  return (
+    <div>
+      <h3>SafexMain Details</h3>
+      <h4>{arbitratorContractAddress}</h4>
+      <h4>{safexMainContractAddress}</h4>
+      <h4>{safexMainBalance} ETH</h4>
+      <h4>{plansCount}</h4>
+      <h4>{claimsCount}</h4>
+      <h4>{claimsAllowed}</h4>
+    </div>
+  );
 }
+
+export default SafexMainDetails;
