@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { utils } from "ethers";
+import { Text, Description, Spacer, Divider, Row, Col, Snippet } from "@geist-ui/react";
 
 function SafexMainDetails({ writeContracts }) {
   const [arbitratorContractAddress, setArbitratorContractAddress] = useState("");
@@ -32,15 +33,25 @@ function SafexMainDetails({ writeContracts }) {
   }, [writeContracts]);
 
   return (
-    <div>
-      <h3>SafexMain Details</h3>
-      <h4>{arbitratorContractAddress}</h4>
-      <h4>{safexMainContractAddress}</h4>
-      <h4>{safexMainBalance} ETH</h4>
-      <h4>{plansCount}</h4>
-      <h4>{claimsCount}</h4>
-      <h4>{claimsAllowed}</h4>
-    </div>
+    <>
+      <Description
+        title="Arbitrator contract"
+        content={<Snippet text={arbitratorContractAddress} type="lite" filled symbol="" width="390px" />}
+      />
+      <Spacer y={2} />
+      <Description
+        title="SafexMain contract"
+        content={<Snippet text={safexMainContractAddress} type="lite" filled symbol="" width="390px" />}
+      />
+      <Spacer y={2} />
+      <Description title="SafexMain balance" content={`${safexMainBalance} ETH`} />
+      <Spacer y={2} />
+      <Description title="Total no. of plans" content={plansCount} />
+      <Spacer y={2} />
+      <Description title="Total no. of claims" content={claimsCount} />
+      <Spacer y={2} />
+      <Description title="Total no. of claims allowed" content={claimsAllowed} />
+    </>
   );
 }
 
