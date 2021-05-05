@@ -1,16 +1,20 @@
 import React from "react";
 import { utils } from "ethers";
-import { Description, Spacer, Snippet } from "@geist-ui/react";
+import { Text, Divider, Spacer, Snippet } from "@geist-ui/react";
 
 function MyAccount({ address, balance }) {
   return (
     <>
-      <Description
-        title="Account address"
-        content={<Snippet text={address} type="lite" filled symbol="" width="390px" />}
-      />
-      <Spacer y={2} />
-      <Description title="Account balance" content={`${utils.formatEther(balance)} ETH`} />
+      <Text b>Account address :</Text>
+      <Spacer />
+      <Snippet text={address} type="lite" filled symbol="" width="390px" />
+      <Divider />
+      <Text b>Account balance :</Text>
+      <Text>
+        {utils.formatEther(balance)}
+        <Spacer inline x={0.35} />
+        ETH
+      </Text>
     </>
   );
 }

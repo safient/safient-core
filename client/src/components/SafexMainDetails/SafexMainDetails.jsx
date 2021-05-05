@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { utils } from "ethers";
-import { Description, Spacer, Snippet, useToasts } from "@geist-ui/react";
+import { Text, Divider, Spacer, Snippet, useToasts } from "@geist-ui/react";
 
 function SafexMainDetails({ writeContracts }) {
   const [arbitratorContractAddress, setArbitratorContractAddress] = useState("");
@@ -47,23 +47,29 @@ function SafexMainDetails({ writeContracts }) {
 
   return (
     <>
-      <Description
-        title="Arbitrator contract"
-        content={<Snippet text={arbitratorContractAddress} type="lite" filled symbol="" width="390px" />}
-      />
-      <Spacer y={2} />
-      <Description
-        title="SafexMain contract"
-        content={<Snippet text={safexMainContractAddress} type="lite" filled symbol="" width="390px" />}
-      />
-      <Spacer y={2} />
-      <Description title="SafexMain balance" content={`${safexMainBalance} ETH`} />
-      <Spacer y={2} />
-      <Description title="Total no. of plans" content={plansCount} />
-      <Spacer y={2} />
-      <Description title="Total no. of claims" content={claimsCount} />
-      <Spacer y={2} />
-      <Description title="Total no. of claims allowed" content={claimsAllowed} />
+      <Text b>Arbitrator contract :</Text>
+      <Spacer />
+      <Snippet text={arbitratorContractAddress} type="lite" filled symbol="" width="390px" />
+      <Divider />
+      <Text b>SafexMain contract :</Text>
+      <Spacer />
+      <Snippet text={safexMainContractAddress} type="lite" filled symbol="" width="390px" />
+      <Divider />
+      <Text b>SafexMain balance :</Text>
+      <Text>
+        {safexMainBalance}
+        <Spacer inline x={0.35} />
+        ETH
+      </Text>
+      <Divider />
+      <Text b>Total no. of plans :</Text>
+      <Text>{plansCount}</Text>
+      <Divider />
+      <Text b>Total no. of claims :</Text>
+      <Text>{claimsCount}</Text>
+      <Divider />
+      <Text b>Total no. of claims allowed :</Text>
+      <Text>{claimsAllowed}</Text>
     </>
   );
 }

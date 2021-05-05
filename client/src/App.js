@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StaticJsonRpcProvider, JsonRpcProvider, Web3Provider } from "@ethersproject/providers";
+import { StaticJsonRpcProvider, Web3Provider } from "@ethersproject/providers";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { useUserAddress } from "eth-hooks";
@@ -71,7 +71,7 @@ function App() {
               <CreatePlan network={targetNetwork.name} address={address} writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="create claim" value="4">
-              <CreateClaim />
+              <CreateClaim network={targetNetwork.name} writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="submit evidence" value="5">
               <SubmitEvidence />
