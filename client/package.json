@@ -13,6 +13,7 @@
     "@ethersproject/solidity": "^5.0.9",
     "@ethersproject/units": "^5.0.6",
     "@geist-ui/react": "^2.1.5",
+    "@geist-ui/react-icons": "^1.0.1",
     "@kleros/archon": "^1.2.2",
     "@ramp-network/ramp-instant-sdk": "^2.2.0",
     "@testing-library/jest-dom": "^5.11.10",

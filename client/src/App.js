@@ -68,7 +68,7 @@ function App() {
               <MyAccount address={address} balance={balance} />
             </Tabs.Item>
             <Tabs.Item label="create plan" value="3">
-              <CreatePlan address={address} writeContracts={writeContracts} />
+              <CreatePlan network={targetNetwork.name} address={address} writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="create claim" value="4">
               <CreateClaim />

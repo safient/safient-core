@@ -1,44 +1,55 @@
 import React, { useEffect, useState } from "react";
 import { utils } from "ethers";
-import Archon from "@kleros/archon";
 import ipfsPublish from "../../ipfs/ipfsPublish";
+import Archon from "@kleros/archon";
+import { Spacer, Text, Link, Note, Input, Button, useToasts } from "@geist-ui/react";
+import { ExternalLink } from "@geist-ui/react-icons";
 
-// const archon = new Archon("https://ropsten.infura.io/v3/2138913d0e324125bf671fafd93e186c", "https://ipfs.kleros.io");
-const archon = new Archon("http://127.0.0.1:8545");
-
-function CreatePlan({ address, writeContracts }) {
+function CreatePlan({ network, address, writeContracts }) {
   const [safexMainContractAddress, setSafexMainContractAddress] = useState("");
   const [inheritorAddress, setInheritorAddress] = useState("");
   const [arbitrationFeeWei, setArbitrationFeeWei] = useState("");
   const [arbitrationFeeEth, setArbitrationFeeEth] = useState("");
   const [extraFeeEth, setExtraFeeEth] = useState("");
-  const [safexAgreementLink, setSafexAgreementLink] = useState(
-    "https://ipfs.kleros.io/ipfs/QmPMdGmenYuh9kzhU6WkEvRsWpr1B8T7nVWA52u6yoJu13/Safex Agreement.png"
-  );
-  const [safexAgreementURI, setSafexAgreementURI] = useState(
-    "/ipfs/QmPMdGmenYuh9kzhU6WkEvRsWpr1B8T7nVWA52u6yoJu13/Safex Agreement.png"
-  );
+  const [loading, setLoading] = useState(false);
+  const [toasts, setToast] = useToasts();
 
   const encoder = new TextEncoder();
+  const safexAgreementLink =
+    "https://ipfs.kleros.io/ipfs/QmPMdGmenYuh9kzhU6WkEvRsWpr1B8T7nVWA52u6yoJu13/Safex Agreement.png";
+  const safexAgreementURI = "/ipfs/QmPMdGmenYuh9kzhU6WkEvRsWpr1B8T7nVWA52u6yoJu13/Safex Agreement.png";
+
+  const showAlert = (alertMessage, alertColor) => {
+    setLoading(false);
+    setToast({
+      text: alertMessage,
+      type: alertColor,
+    });
+  };
+
+  let archon;
+  if (network === "localhost") {
+    archon = new Archon("http://127.0.0.1:8545");
+  } else {
+    archon = new Archon(`https://${network}.infura.io/v3/2138913d0e324125bf671fafd93e186c`, "https://ipfs.kleros.io");
+  }
 
   useEffect(async () => {
     try {
       setSafexMainContractAddress(writeContracts.SafexMain.address);
-
       const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
         writeContracts.AutoAppealableArbitrator.address
       );
       setArbitrationFeeWei(arbitrationFeeWei);
-
       setArbitrationFeeEth(utils.formatEther(arbitrationFeeWei));
     } catch (e) {
-      console.log(e);
+      showAlert("Error !", "warning");
     }
   }, [writeContracts]);
 
   const onFormSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     let totalPrice;
     if (extraFeeEth !== 0 && extraFeeEth !== "" && extraFeeEth !== null) {
       const extraFeeWei = utils.parseEther(extraFeeEth);
@@ -47,7 +58,6 @@ function CreatePlan({ address, writeContracts }) {
     } else {
       totalPrice = arbitrationFeeWei;
     }
-
     const metaevidenceObj = {
       fileURI: safexAgreementURI,
       fileHash: "QmPMdGmenYuh9kzhU6WkEvRsWpr1B8T7nVWA52u6yoJu13",
@@ -67,26 +77,71 @@ function CreatePlan({ address, writeContracts }) {
         descriptions: ["The claimer is qualified for inheritence", "The claimer is not qualified for inheritence"],
       },
     };
-
     const cid = await ipfsPublish("metaEvidence.json", encoder.encode(JSON.stringify(metaevidenceObj)));
     const metaevidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
-    writeContracts.SafexMain.createPlan(inheritorAddress, metaevidenceURI, { value: totalPrice });
+    try {
+      const tx = await writeContracts.SafexMain.createPlan(inheritorAddress, metaevidenceURI, { value: totalPrice });
+      const txReceipt = await tx.wait();
+      if (txReceipt.status === 1) {
+        showAlert("Transaction Successful !", "success");
+      } else if (txReceipt.status === 0) {
+        showAlert("Transaction Rejected !", "warning");
+      }
+    } catch (e) {
+      if (e.data !== undefined) {
+        const error = e.data.message
+          .split(":")[2]
+          .split("revert ")[1]
+          .split(" ")
+          .map((word) => word[0].toUpperCase() + word.substring(1))
+          .join(" ");
+        showAlert(error + " !", "warning");
+      } else {
+        showAlert("Error !", "warning");
+      }
+    }
   };
 
   return (
-    <div>
-      <h3>Create Plan</h3>
-      <h4>Arbitration fee : {arbitrationFeeEth} ETH</h4>
-      <form onSubmit={onFormSubmit}>
-        <h5>Inheritor address</h5>
-        <input type="text" required value={inheritorAddress} onChange={(e) => setInheritorAddress(e.target.value)} />
-        <h5>
-          Add Extra Funds <small>(Optional)</small> :
-        </h5>
-        <input type="number" value={extraFeeEth} onChange={(e) => setExtraFeeEth(e.target.value)} />
-        <button type="submit">create plan</button>
+    <>
+      <Note label="Note ">
+        Minimum funds required is the current arbitration fee (subject to change in the future) that is collected and
+        stored in the plan. It can be used by the inheritor to create a claim. Owner of the plan can recover funds in
+        the plan at anytime.
+      </Note>
+      <Spacer y={2} />
+      <Link target="_blank" href={safexAgreementLink} style={{ display: "flex", alignItems: "flex-start" }}>
+        <Text i>Safex Plan Agreement</Text>
+        <Spacer inline x={0.35} />
+        <ExternalLink size={20} />
+      </Link>
+      <Spacer y={2} />
+      <form>
+        <Input readOnly placeholder={`${arbitrationFeeEth} ETH`} width="50%">
+          <Text b>Minimum Funds Required :</Text>
+        </Input>
+        <Spacer />
+        <Input placeholder="" clearable onChange={(e) => setInheritorAddress(e.target.value)} width="50%">
+          <Text b>Inheritor Address :</Text>
+        </Input>
+        <Spacer />
+        <Input placeholder="" type="number" onChange={(e) => setExtraFeeEth(e.target.value)} width="50%">
+          <Text b>
+            Extra Funds <Text small>(optional)</Text> :
+          </Text>
+        </Input>
+        <Spacer />
+        {!loading ? (
+          <Button type="secondary" auto onClick={onFormSubmit}>
+            Create Plan
+          </Button>
+        ) : (
+          <Button type="secondary" auto loading>
+            Create Plan
+          </Button>
+        )}
       </form>
-    </div>
+    </>
   );
 }
 
