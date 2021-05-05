@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { utils } from "ethers";
-import { Text, Description, Spacer, Divider, Row, Col, Snippet } from "@geist-ui/react";
+import { Description, Spacer, Snippet } from "@geist-ui/react";
 
 function SafexMainDetails({ writeContracts }) {
   const [arbitratorContractAddress, setArbitratorContractAddress] = useState("");
