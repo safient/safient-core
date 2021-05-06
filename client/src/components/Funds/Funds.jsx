@@ -59,7 +59,6 @@ function Funds({ writeContracts }) {
             const error = e.data.message.split(":")[2].split("revert ")[1];
             showAlert(error + "!", "warning");
           } else {
-            console.log(e);
             showAlert("Error!", "warning");
           }
         }
