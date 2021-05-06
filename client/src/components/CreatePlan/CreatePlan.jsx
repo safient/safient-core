@@ -43,14 +43,14 @@ function CreatePlan({ network, address, writeContracts }) {
       setArbitrationFeeWei(arbitrationFeeWei);
       setArbitrationFeeEth(utils.formatEther(arbitrationFeeWei));
     } catch (e) {
-      showAlert("Error !", "warning");
+      showAlert("Error!", "warning");
     }
   }, [writeContracts]);
 
   const onFormSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     if (inheritorAddress !== "" && inheritorAddress.length === 42) {
+      setLoading(true);
       let totalPrice;
       if (extraFeeEth !== 0 && extraFeeEth !== "" && extraFeeEth !== null) {
         const extraFeeWei = utils.parseEther(extraFeeEth);
@@ -84,25 +84,20 @@ function CreatePlan({ network, address, writeContracts }) {
         const tx = await writeContracts.SafexMain.createPlan(inheritorAddress, metaevidenceURI, { value: totalPrice });
         const txReceipt = await tx.wait();
         if (txReceipt.status === 1) {
-          showAlert("Transaction Successful !", "success");
+          showAlert("Transaction successful!", "success");
         } else if (txReceipt.status === 0) {
-          showAlert("Transaction Rejected !", "warning");
+          showAlert("Transaction rejected!", "warning");
         }
       } catch (e) {
         if (e.data !== undefined) {
-          const error = e.data.message
-            .split(":")[2]
-            .split("revert ")[1]
-            .split(" ")
-            .map((word) => word[0].toUpperCase() + word.substring(1))
-            .join(" ");
-          showAlert(error + " !", "warning");
+          const error = e.data.message.split(":")[2].split("revert ")[1];
+          showAlert(error + "!", "warning");
         } else {
-          showAlert("Error !", "warning");
+          showAlert("Error!", "warning");
         }
       }
     } else {
-      showAlert("Enter Valid Inheritor Address !", "warning");
+      showAlert("Enter a valid inheritor address!", "warning");
     }
   };
 

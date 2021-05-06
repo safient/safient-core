@@ -39,52 +39,51 @@ function CreateClaim({ network, writeContracts }) {
       );
       setArbitrationFeeEth(utils.formatEther(arbitrationFeeWei));
     } catch (e) {
-      showAlert("Error !", "warning");
+      showAlert("Error!", "warning");
     }
   }, [writeContracts]);
 
   const onFormSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     if (planId !== "" && planId !== null && Number(planId) !== 0 && Number(planId) > 0) {
       if (buffer !== null) {
-        const fileCid = await ipfsPublish(fileName, buffer);
-        const fileURI = `/ipfs/${fileCid[1].hash}${fileCid[0].path}`;
-        const evidenceObj = {
-          fileURI,
-          fileHash: fileCid[1].hash,
-          fileTypeExtension: fileExtension,
-          name: evidenceName,
-          description: evidenceDescription,
-        };
-        const cid = await ipfsPublish("evidence.json", encoder.encode(JSON.stringify(evidenceObj)));
-        const evidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
-        try {
-          const tx = await writeContracts.SafexMain.createClaim(Number(planId), evidenceURI);
-          const txReceipt = await tx.wait();
-          if (txReceipt.status === 1) {
-            showAlert("Transaction Successful !", "success");
-          } else if (txReceipt.status === 0) {
-            showAlert("Transaction Rejected !", "warning");
+        if (evidenceName !== "" && evidenceDescription !== "") {
+          setLoading(true);
+          const fileCid = await ipfsPublish(fileName, buffer);
+          const fileURI = `/ipfs/${fileCid[1].hash}${fileCid[0].path}`;
+          const evidenceObj = {
+            fileURI,
+            fileHash: fileCid[1].hash,
+            fileTypeExtension: fileExtension,
+            name: evidenceName,
+            description: evidenceDescription,
+          };
+          const cid = await ipfsPublish("evidence.json", encoder.encode(JSON.stringify(evidenceObj)));
+          const evidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
+          try {
+            const tx = await writeContracts.SafexMain.createClaim(Number(planId), evidenceURI);
+            const txReceipt = await tx.wait();
+            if (txReceipt.status === 1) {
+              showAlert("Transaction successful!", "success");
+            } else if (txReceipt.status === 0) {
+              showAlert("Transaction rejected!", "warning");
+            }
+          } catch (e) {
+            if (e.data !== undefined) {
+              const error = e.data.message.split(":")[2].split("revert ")[1];
+              showAlert(error + "!", "warning");
+            } else {
+              showAlert("Error!", "warning");
+            }
           }
-        } catch (e) {
-          if (e.data !== undefined) {
-            const error = e.data.message
-              .split(":")[2]
-              .split("revert ")[1]
-              .split(" ")
-              .map((word) => word[0].toUpperCase() + word.substring(1))
-              .join(" ");
-            showAlert(error + " !", "warning");
-          } else {
-            showAlert("Error !", "warning");
-          }
+        } else {
+          showAlert("Enter evidence name and description!", "warning");
         }
       } else {
-        showAlert("Select File !", "warning");
+        showAlert("Select a file to upload!", "warning");
       }
     } else {
-      showAlert("Enter Valid Plan Id !", "warning");
+      showAlert("Enter a valid plan Id!", "warning");
     }
   };
 

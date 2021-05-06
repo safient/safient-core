@@ -32,13 +32,8 @@ function SafexMainDetails({ writeContracts }) {
       setClaimsAllowed(Number(claimsAllowed));
     } catch (e) {
       if (e.data !== undefined) {
-        const error = e.data.message
-          .split(":")[2]
-          .split("revert ")[1]
-          .split(" ")
-          .map((word) => word[0].toUpperCase() + word.substring(1))
-          .join(" ");
-        showAlert(error + " !", "warning");
+        const error = e.data.message.split(":")[2].split("revert ")[1];
+        showAlert(error + "!", "warning");
       } else {
         console.log(e);
       }

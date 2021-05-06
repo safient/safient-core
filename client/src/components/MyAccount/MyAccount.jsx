@@ -11,7 +11,7 @@ function MyAccount({ address, balance }) {
       <Divider />
       <Text b>Account balance :</Text>
       <Text>
-        {utils.formatEther(balance)}
+        {balance !== undefined ? utils.formatEther(balance) : ""}
         <Spacer inline x={0.35} />
         ETH
       </Text>

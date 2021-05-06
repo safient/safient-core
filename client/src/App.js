@@ -59,7 +59,7 @@ function App() {
       ) : (
         <>
           <Spacer y={1} />
-          <Tabs initialValue="1">
+          <Tabs initialValue="2">
             <Spacer y={1} />
             <Tabs.Item label="safex" value="1">
               <SafexMainDetails writeContracts={writeContracts} />
@@ -74,10 +74,10 @@ function App() {
               <CreateClaim network={targetNetwork.name} writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="submit evidence" value="5">
-              <SubmitEvidence />
+              <SubmitEvidence writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="funds" value="6">
-              <Funds />
+              <Funds writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="plans" value="7">
               <Plans writeContracts={writeContracts} />
