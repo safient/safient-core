@@ -6,8 +6,7 @@ import { useState, useEffect } from "react";
 /*
   ~ What it does? ~
 
-  Loads your local contracts and gives options to read values from contracts 
-                                              or write transactions into them
+  Loads your local contracts and gives options to read values from contracts or write transactions into them
 
   ~ How can I use? ~
 
@@ -18,7 +17,7 @@ import { useState, useEffect } from "react";
 
   - localProvider enables reading values from contracts
   - userProvider enables writing transactions into contracts
-  - Example of keeping track of "purpose" variable by loading contracts into readContracts 
+  - Example of keeping track of "purpose" variable by loading contracts into readContracts
     and using ContractReader.js hook:
     const purpose = useContractReader(readContracts,"YourContract", "purpose")
   - Example of using setPurpose function from our contract and writing transactions by Transactor.js helper:
@@ -29,7 +28,7 @@ const loadContract = (contractName, signer) => {
   const newContract = new Contract(
     require(`../contracts/${contractName}.address.js`),
     require(`../contracts/${contractName}.abi.js`),
-    signer,
+    signer
   );
   try {
     newContract.bytecode = require(`../contracts/${contractName}.bytecode.js`);

@@ -1,9 +1,3 @@
-export const INFURA_ID = "baba8e335c45440fbdd81a5812b65d06";
-
-export const ETHERSCAN_KEY = "QPGV73QAFBR2S9WDUKR6HI17SV2APCJXFU";
-
-export const BLOCKNATIVE_DAPPID = "7dfb88c1-4ad1-48c7-aea0-1c726b43df68";
-
 export const NETWORK = (chainId) => {
   for (let n in NETWORKS) {
     if (NETWORKS[n].chainId == chainId) {
@@ -24,14 +18,14 @@ export const NETWORKS = {
     name: "mainnet",
     color: "#ff8b9e",
     chainId: 1,
-    rpcUrl: `https://mainnet.infura.io/v3/${INFURA_ID}`,
+    rpcUrl: `https://mainnet.infura.io/v3/${process.env.REACT_APP_INFURA_API_KEY}`,
     blockExplorer: "https://etherscan.io/",
   },
   kovan: {
     name: "kovan",
     color: "#7003DD",
     chainId: 42,
-    rpcUrl: `https://kovan.infura.io/v3/${INFURA_ID}`,
+    rpcUrl: `https://kovan.infura.io/v3/${process.env.REACT_APP_INFURA_API_KEY}`,
     blockExplorer: "https://kovan.etherscan.io/",
     faucet: "https://gitter.im/kovan-testnet/faucet",
   },
@@ -39,7 +33,7 @@ export const NETWORKS = {
     name: "rinkeby",
     color: "#e0d068",
     chainId: 4,
-    rpcUrl: `https://rinkeby.infura.io/v3/${INFURA_ID}`,
+    rpcUrl: `https://rinkeby.infura.io/v3/${process.env.REACT_APP_INFURA_API_KEY}`,
     faucet: "https://faucet.rinkeby.io/",
     blockExplorer: "https://rinkeby.etherscan.io/",
   },
@@ -49,6 +43,6 @@ export const NETWORKS = {
     chainId: 3,
     faucet: "https://faucet.ropsten.be/",
     blockExplorer: "https://ropsten.etherscan.io/",
-    rpcUrl: `https://ropsten.infura.io/v3/${INFURA_ID}`,
+    rpcUrl: `https://ropsten.infura.io/v3/${process.env.REACT_APP_INFURA_API_KEY}`,
   },
 };

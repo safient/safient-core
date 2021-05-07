@@ -35,7 +35,6 @@ function Claims({ writeContracts }) {
   useEffect(() => {
     let newData = [];
     claims.map((claim) => {
-      console.log(claim);
       const dataItem = {
         planId: String(claim.planId),
         disputeId: String(claim.disputeId),
@@ -68,7 +67,7 @@ function Claims({ writeContracts }) {
         <Table.Column prop="planId" label="Plan Id" />
         <Table.Column prop="disputeId" label="Dispute Id" />
         <Table.Column prop="claimedBy" label="Claimed By" />
-        <Table.Column prop="result" label="Claim Status" />
+        <Table.Column prop="result" label="Status" />
       </Table>
     </>
   );

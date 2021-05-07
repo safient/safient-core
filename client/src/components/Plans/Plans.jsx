@@ -59,7 +59,7 @@ function Plans({ writeContracts }) {
         <Table.Column prop="planCreatedBy" label="Created By" />
         <Table.Column prop="planCurrentOwner" label="Owned By" />
         <Table.Column prop="planInheritor" label="Inheritor" />
-        <Table.Column prop="claimsCount" label="Claims Count" />
+        <Table.Column prop="claimsCount" label="Claims" />
         <Table.Column prop="planFunds" label="Plan Funds" />
       </Table>
     </>

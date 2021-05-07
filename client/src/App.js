@@ -4,7 +4,7 @@ import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { useUserAddress } from "eth-hooks";
 import { useUserProvider, useContractLoader, useBalance } from "./hooks";
-import { INFURA_ID, NETWORKS } from "./constants";
+import { NETWORKS } from "./networks";
 import { Text, Page, Tabs, Row, Col, Spacer } from "@geist-ui/react";
 
 import ContractsNotDeployed from "./components/ContractsNotDeployed/ContractsNotDeployed";
@@ -65,7 +65,7 @@ function App() {
               <SafexMainDetails writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="account" value="2">
-              <MyAccount address={address} balance={balance} />
+              <MyAccount address={address} balance={balance} writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="create plan" value="3">
               <CreatePlan network={targetNetwork.name} address={address} writeContracts={writeContracts} />
@@ -98,7 +98,7 @@ const web3Modal = new Web3Modal({
     walletconnect: {
       package: WalletConnectProvider,
       options: {
-        infuraId: INFURA_ID,
+        infuraId: process.env.REACT_APP_INFURA_API_KEY,
       },
     },
   },
