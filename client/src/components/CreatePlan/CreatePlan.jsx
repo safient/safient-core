@@ -34,17 +34,20 @@ function CreatePlan({ network, address, writeContracts }) {
     archon = new Archon(`https://${network}.infura.io/v3/2138913d0e324125bf671fafd93e186c`, "https://ipfs.kleros.io");
   }
 
-  useEffect(async () => {
-    try {
-      setSafexMainContractAddress(writeContracts.SafexMain.address);
-      const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
-        writeContracts.AutoAppealableArbitrator.address
-      );
-      setArbitrationFeeWei(arbitrationFeeWei);
-      setArbitrationFeeEth(utils.formatEther(arbitrationFeeWei));
-    } catch (e) {
-      showAlert("Error!", "warning");
+  useEffect(() => {
+    async function init() {
+      try {
+        setSafexMainContractAddress(writeContracts.SafexMain.address);
+        const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
+          writeContracts.AutoAppealableArbitrator.address
+        );
+        setArbitrationFeeWei(arbitrationFeeWei);
+        setArbitrationFeeEth(utils.formatEther(arbitrationFeeWei));
+      } catch (e) {
+        showAlert("Error!", "warning");
+      }
     }
+    init();
   }, [writeContracts]);
 
   const onFormSubmit = async (e) => {

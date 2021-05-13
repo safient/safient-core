@@ -10,9 +10,12 @@ function Funds({ writeContracts }) {
   const [loading, setLoading] = useState(false);
   const [toasts, setToast] = useToasts();
 
-  useEffect(async () => {
-    const plansCount = await writeContracts.SafexMain.plansCount();
-    setPlansCount(Number(plansCount));
+  useEffect(() => {
+    async function init() {
+      const plansCount = await writeContracts.SafexMain.plansCount();
+      setPlansCount(Number(plansCount));
+    }
+    init();
   }, [writeContracts]);
 
   const showAlert = (alertMessage, alertColor) => {

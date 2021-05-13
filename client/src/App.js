@@ -33,13 +33,21 @@ function App() {
   const selectedChainId = userProvider && userProvider._network && userProvider._network.chainId;
   const writeContracts = useContractLoader(userProvider);
 
-  const loadWeb3Modal = useCallback(async () => {
-    const provider = await web3Modal.connect();
-    setInjectedProvider(new Web3Provider(provider));
+  const loadWeb3Modal = useCallback(() => {
+    async function setProvider() {
+      const provider = await web3Modal.connect();
+      setInjectedProvider(new Web3Provider(provider));
+    }
+    setProvider();
   }, [setInjectedProvider]);
 
   useEffect(() => {
-    if (web3Modal.cachedProvider) loadWeb3Modal();
+    function init() {
+      if (web3Modal.cachedProvider) {
+        loadWeb3Modal();
+      }
+    }
+    init();
   }, [loadWeb3Modal]);
 
   return (

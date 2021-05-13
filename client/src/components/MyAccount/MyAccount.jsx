@@ -8,69 +8,79 @@ function MyAccount({ address, balance, writeContracts }) {
   const [claims, setClaims] = useState([]);
   const [claimData, setClaimData] = useState([]);
 
-  useEffect(async () => {
-    try {
-      const plansCount = await writeContracts.SafexMain.plansCount();
-      const claimsCount = await writeContracts.SafexMain.claimsCount();
-      let allPlans = [];
-      for (let i = 1; i <= plansCount; i++) {
-        const plan = await writeContracts.SafexMain.plans(i);
-        allPlans.push(plan);
+  useEffect(() => {
+    async function init() {
+      try {
+        const plansCountArray = Array(Number(await writeContracts.SafexMain.plansCount())).fill(0);
+        const claimsCountArray = Array(Number(await writeContracts.SafexMain.claimsCount())).fill(0);
+        let plans = [];
+        let claims = [];
+        plansCountArray.forEach(async (_, i) => {
+          const plan = await writeContracts.SafexMain.plans(i + 1);
+          plans.push(plan);
+          if (i === plansCountArray.length - 1) {
+            setPlans(plans);
+          }
+        });
+        claimsCountArray.forEach(async (_, i) => {
+          const claim = await writeContracts.SafexMain.claims(i);
+          claims.push(claim);
+          if (i === claimsCountArray.length - 1) {
+            setClaims(claims);
+          }
+        });
+      } catch (e) {
+        console.log(e);
       }
-      let allClaims = [];
-      for (let i = 0; i < claimsCount; i++) {
-        const claim = await writeContracts.SafexMain.claims(i);
-        allClaims.push(claim);
-      }
-      setPlans(allPlans);
-      setClaims(allClaims);
-    } catch (e) {
-      console.log(e);
     }
+    init();
   }, [writeContracts]);
 
   useEffect(() => {
-    const myPlans = plans.filter((plan) => plan.planCurrentOwner === address);
-    const myClaims = claims.filter((claim) => claim.claimedBy === address);
-    let newPlanData = [];
-    let newClaimData = [];
-    myPlans.map((plan) => {
-      const dataItem = {
-        planId: String(plan.planId),
-        planCreatedBy:
-          plan.planCreatedBy.substr(0, 5) + "..." + plan.planCreatedBy.slice(plan.planCreatedBy.length - 5),
-        planInheritor:
-          plan.planInheritor.substr(0, 5) + "..." + plan.planInheritor.slice(plan.planInheritor.length - 5),
-        claimsCount: String(plan.claimsCount),
-        planFunds: utils.formatEther(plan.planFunds) + " ETH",
-      };
-      newPlanData.push(dataItem);
-    });
-    myClaims.map((claim) => {
-      const dataItem = {
-        planId: String(claim.planId),
-        disputeId: String(claim.disputeId),
-        result:
-          (claim.result === "Active" && (
-            <Tag type="secondary" invert>
-              Active
-            </Tag>
-          )) ||
-          (claim.result === "Passed" && (
-            <Tag type="success" invert>
-              Passed
-            </Tag>
-          )) ||
-          (claim.result === "Failed" && (
-            <Tag type="error" invert>
-              Failed
-            </Tag>
-          )),
-      };
-      newClaimData.push(dataItem);
-    });
-    setPlanData(newPlanData);
-    setClaimData(newClaimData);
+    function init() {
+      const myPlans = plans.filter((plan) => plan.planCurrentOwner === address);
+      const myClaims = claims.filter((claim) => claim.claimedBy === address);
+      let newPlanData = [];
+      let newClaimData = [];
+      myPlans.map((plan) => {
+        const dataItem = {
+          planId: String(plan.planId),
+          planCreatedBy:
+            plan.planCreatedBy.substr(0, 5) + "..." + plan.planCreatedBy.slice(plan.planCreatedBy.length - 5),
+          planInheritor:
+            plan.planInheritor.substr(0, 5) + "..." + plan.planInheritor.slice(plan.planInheritor.length - 5),
+          claimsCount: String(plan.claimsCount),
+          planFunds: utils.formatEther(plan.planFunds) + " ETH",
+        };
+        newPlanData.push(dataItem);
+      });
+      myClaims.map((claim) => {
+        const dataItem = {
+          planId: String(claim.planId),
+          disputeId: String(claim.disputeId),
+          result:
+            (claim.result === "Active" && (
+              <Tag type="secondary" invert>
+                Active
+              </Tag>
+            )) ||
+            (claim.result === "Passed" && (
+              <Tag type="success" invert>
+                Passed
+              </Tag>
+            )) ||
+            (claim.result === "Failed" && (
+              <Tag type="error" invert>
+                Failed
+              </Tag>
+            )),
+        };
+        newClaimData.push(dataItem);
+      });
+      setPlanData(newPlanData);
+      setClaimData(newClaimData);
+    }
+    init();
   }, [plans, claims]);
 
   return (

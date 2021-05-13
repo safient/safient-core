@@ -14,42 +14,50 @@ function Plans({ writeContracts }) {
     });
   };
 
-  useEffect(async () => {
-    try {
-      const plansCount = await writeContracts.SafexMain.plansCount();
-      let allPlans = [];
-      for (let i = 1; i <= plansCount; i++) {
-        const plan = await writeContracts.SafexMain.plans(i);
-        allPlans.push(plan);
-      }
-      setPlans(allPlans);
-    } catch (e) {
-      if (e.data !== undefined) {
-        const error = e.data.message.split(":")[2].split("revert ")[1];
-        showAlert(error + "!", "warning");
-      } else {
-        showAlert("Error!", "warning");
+  useEffect(() => {
+    async function init() {
+      try {
+        const plansCountArray = Array(Number(await writeContracts.SafexMain.plansCount())).fill(0);
+        let plans = [];
+        plansCountArray.forEach(async (_, i) => {
+          const plan = await writeContracts.SafexMain.plans(i + 1);
+          plans.push(plan);
+          if (i === plansCountArray.length - 1) {
+            setPlans(plans);
+          }
+        });
+      } catch (e) {
+        if (e.data !== undefined) {
+          const error = e.data.message.split(":")[2].split("revert ")[1];
+          showAlert(error + "!", "warning");
+        } else {
+          showAlert("Error!", "warning");
+        }
       }
     }
+    init();
   }, [writeContracts]);
 
   useEffect(() => {
-    let newData = [];
-    plans.map((plan) => {
-      const dataItem = {
-        planId: String(plan.planId),
-        planCreatedBy:
-          plan.planCreatedBy.substr(0, 5) + "..." + plan.planCreatedBy.slice(plan.planCreatedBy.length - 5),
-        planCurrentOwner:
-          plan.planCurrentOwner.substr(0, 5) + "..." + plan.planCurrentOwner.slice(plan.planCurrentOwner.length - 5),
-        planInheritor:
-          plan.planInheritor.substr(0, 5) + "..." + plan.planInheritor.slice(plan.planInheritor.length - 5),
-        claimsCount: String(plan.claimsCount),
-        planFunds: utils.formatEther(plan.planFunds) + " ETH",
-      };
-      newData.push(dataItem);
-    });
-    setData(newData);
+    function init() {
+      let newData = [];
+      plans.map((plan) => {
+        const dataItem = {
+          planId: String(plan.planId),
+          planCreatedBy:
+            plan.planCreatedBy.substr(0, 5) + "..." + plan.planCreatedBy.slice(plan.planCreatedBy.length - 5),
+          planCurrentOwner:
+            plan.planCurrentOwner.substr(0, 5) + "..." + plan.planCurrentOwner.slice(plan.planCurrentOwner.length - 5),
+          planInheritor:
+            plan.planInheritor.substr(0, 5) + "..." + plan.planInheritor.slice(plan.planInheritor.length - 5),
+          claimsCount: String(plan.claimsCount),
+          planFunds: utils.formatEther(plan.planFunds) + " ETH",
+        };
+        newData.push(dataItem);
+      });
+      setData(newData);
+    }
+    init();
   }, [plans]);
 
   return (

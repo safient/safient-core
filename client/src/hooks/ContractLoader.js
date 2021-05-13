@@ -50,15 +50,12 @@ export default function useContractLoader(providerOrSigner) {
           if (providerOrSigner && typeof providerOrSigner.listAccounts === "function") {
             accounts = await providerOrSigner.listAccounts();
           }
-
           if (accounts && accounts.length > 0) {
             signer = providerOrSigner.getSigner();
           } else {
             signer = providerOrSigner;
           }
-
           const contractList = require("../contracts/contracts.js");
-
           const newContracts = contractList.reduce((accumulator, contractName) => {
             accumulator[contractName] = loadContract(contractName, signer);
             return accumulator;
