@@ -4,22 +4,20 @@
 
 ```bash
 git clone https://github.com/getsafex/safex-claims.git
-
 cd safex-claims
-```
-```bash
 npm install
-```
-> in a second terminal window:
-
-```bash
 npm run chain
 ```
 
-> in a third terminal window:
+> in a second terminal window:
 
 ```bash
 npm run deploy
+cd client
+npm install
+npm run start
 ```
-🔏 Smart contract is located at `/contracts`
+
+🌐 Open http://localhost:3000 in your browser to test the application <br />
+🔏 Smart contract is located at `/contracts` <br />
 📝 Access artifacts from /subgraph and /client/src/contracts folders

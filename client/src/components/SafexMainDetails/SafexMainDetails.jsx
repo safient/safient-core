@@ -1,46 +1,75 @@
-import React, { Component } from "react";
-import Web3 from "web3";
+import React, { useEffect, useState } from "react";
+import { utils } from "ethers";
+import { Text, Divider, Spacer, Snippet, useToasts } from "@geist-ui/react";
 
-const web3 = new Web3();
+function SafexMainDetails({ writeContracts }) {
+  const [arbitratorContractAddress, setArbitratorContractAddress] = useState("");
+  const [safexMainContractAddress, setSafexMainContractAddress] = useState("");
+  const [safexMainBalance, setSafexMainBalance] = useState(0);
+  const [plansCount, setPlansCount] = useState(0);
+  const [claimsCount, setClaimsCount] = useState(0);
+  const [claimsAllowed, setClaimsAllowed] = useState(0);
+  const [toasts, setToast] = useToasts();
 
-export default class SafexMainDetails extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      safexMainBalanceEth: 0,
-      claimsAllowed: 0,
-    };
-  }
-
-  componentDidMount = async () => {
-    const safexMainBalanceWei = await this.props.safexMainContract.methods.getSafexMainContractBalance().call();
-    const safexMainBalanceEth = web3.utils.fromWei(safexMainBalanceWei, "ether");
-    this.setState({ safexMainBalanceEth });
-    const claimsAllowed = await this.props.safexMainContract.methods.getTotalClaimsAllowed().call();
-    this.setState({ claimsAllowed });
+  const showAlert = (alertMessage, alertColor) => {
+    setToast({
+      text: alertMessage,
+      type: alertColor,
+    });
   };
 
-  render() {
-    return (
-      <div className="p-4 pt-4">
-        <p className="lead">AutoAppealableArbitrator contract address :</p>
-        <h5>{this.props.arbitratorContractAddress}</h5>
-        <hr className="my-4" />
-        <p className="lead">SafexMain contract address :</p>
-        <h5>{this.props.safexMainContractAddress}</h5>
-        <hr className="my-4" />
-        <p className="lead">SafexMain balance :</p>
-        <h5>{this.state.safexMainBalanceEth} ETH</h5>
-        <hr className="my-4" />
-        <p className="lead">No. of plans :</p>
-        <h5>{this.props.plansCount}</h5>
-        <hr className="my-4" />
-        <p className="lead">No. of claims :</p>
-        <h5>{this.props.claimsCount}</h5>
-        <hr className="my-4" />
-        <p className="lead">No. of claims allowed on a plan :</p>
-        <h5>{this.state.claimsAllowed}</h5>
-      </div>
-    );
-  }
+  useEffect(() => {
+    async function init() {
+      try {
+        setArbitratorContractAddress(writeContracts.AutoAppealableArbitrator.address);
+        setSafexMainContractAddress(writeContracts.SafexMain.address);
+        const balance = await writeContracts.SafexMain.getSafexMainContractBalance();
+        setSafexMainBalance(utils.formatEther(balance));
+        const plansCount = await writeContracts.SafexMain.plansCount();
+        setPlansCount(Number(plansCount));
+        const claimsCount = await writeContracts.SafexMain.claimsCount();
+        setClaimsCount(Number(claimsCount));
+        const claimsAllowed = await writeContracts.SafexMain.getTotalClaimsAllowed();
+        setClaimsAllowed(Number(claimsAllowed));
+      } catch (e) {
+        if (e.data !== undefined) {
+          const error = e.data.message.split(":")[2].split("revert ")[1];
+          showAlert(error + "!", "warning");
+        } else {
+          console.log(e);
+        }
+      }
+    }
+    init();
+  }, [writeContracts]);
+
+  return (
+    <>
+      <Text b>Arbitrator contract :</Text>
+      <Spacer />
+      <Snippet text={arbitratorContractAddress} type="lite" filled symbol="" width="390px" />
+      <Divider />
+      <Text b>SafexMain contract :</Text>
+      <Spacer />
+      <Snippet text={safexMainContractAddress} type="lite" filled symbol="" width="390px" />
+      <Divider />
+      <Text b>SafexMain balance :</Text>
+      <Text>
+        {safexMainBalance}
+        <Spacer inline x={0.35} />
+        ETH
+      </Text>
+      <Divider />
+      <Text b>Total no. of plans :</Text>
+      <Text>{plansCount}</Text>
+      <Divider />
+      <Text b>Total no. of claims :</Text>
+      <Text>{claimsCount}</Text>
+      <Divider />
+      <Text b>Total no. of claims allowed :</Text>
+      <Text>{claimsAllowed}</Text>
+    </>
+  );
 }
+
+export default SafexMainDetails;

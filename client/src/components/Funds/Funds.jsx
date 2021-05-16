@@ -1,94 +1,128 @@
-import React, { Component } from "react";
-import Web3 from "web3";
+import React, { useEffect, useState } from "react";
+import { utils } from "ethers";
+import { Spacer, Text, Input, Button, useToasts, Note, Select } from "@geist-ui/react";
 
-const web3 = new Web3();
+function Funds({ writeContracts }) {
+  const [plansCount, setPlansCount] = useState(0);
+  const [planId, setPlanId] = useState("");
+  const [action, setAction] = useState("");
+  const [fundPriceEth, setFundPriceEth] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [toasts, setToast] = useToasts();
 
-export default class Funds extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      planId: "",
-      action: "recover",
-      fundPriceEth: "",
-    };
-  }
+  useEffect(() => {
+    async function init() {
+      const plansCount = await writeContracts.SafexMain.plansCount();
+      setPlansCount(Number(plansCount));
+    }
+    init();
+  }, [writeContracts]);
 
-  onFormSubmit = async (e) => {
-    e.preventDefault();
-    const planId = Number(this.state.planId);
-    const fund = Number(this.state.fundPriceEth);
-    if (planId > 0 === true && planId <= this.props.plansCount === true) {
-      if (this.state.action === "recover") {
-        this.props.recoverPlanFunds(planId);
-      } else if (this.state.action === "deposit") {
-        if (fund > 0 === true) {
-          this.props.depositPlanFunds(planId, Number(web3.utils.toWei(this.state.fundPriceEth, "ether")));
-          this.setState({ fundPriceEth: "" });
-        } else {
-          alert("Deposit fund should be more than 0!");
-        }
-      }
-    } else {
-      alert("Enter valid plan id!");
+  const showAlert = (alertMessage, alertColor) => {
+    setLoading(false);
+    setToast({
+      text: alertMessage,
+      type: alertColor,
+    });
+  };
+
+  const txResult = async (tx) => {
+    const txReceipt = await tx.wait();
+    if (txReceipt.status === 1) {
+      showAlert("Transaction successful!", "success");
+    } else if (txReceipt.status === 0) {
+      showAlert("Transaction rejected!", "warning");
     }
   };
 
-  render() {
-    return (
-      <div className="p-4 pt-4">
-        <p className="lead">Deposit Amount or Recover All Funds :</p>
-        <p>
-          Only owner of the plan can recover the funds in it. However, anybody can deposit funds in any of the existing
-          plans.
-        </p>
-        <form onSubmit={this.onFormSubmit}>
-          <div className="form-group mb-4 mt-4">
-            <h5 className="text-capitalize">Plan Id :</h5>
-            <input
-              type="number"
-              className="form-control border border-primary"
-              style={{ width: "27%" }}
-              value={this.state.planId}
-              onChange={(e) => this.setState({ planId: e.target.value })}
-            />
-          </div>
-          <div className="form-group mb-4">
-            <h5 className="text-capitalize">Action :</h5>
-            <select
-              style={{ width: "27%" }}
-              value={this.state.action}
-              onChange={(e) => this.setState({ action: e.target.value })}
-              className="form-control border border-primary"
-            >
-              <option value="deposit">Deposit</option>
-              <option value="recover">Recover</option>
-            </select>
-          </div>
-          {this.state.action === "deposit" ? (
-            <>
-              <div className="form-group mb-4 mt-4">
-                <h5 className="text-capitalize">Amount :</h5>
-                <input
-                  type="number"
-                  className="form-control border border-primary"
-                  style={{ width: "27%" }}
-                  value={this.state.fundPriceEth}
-                  onChange={(e) => this.setState({ fundPriceEth: e.target.value })}
-                />
-              </div>
-            </>
-          ) : null}
-          <div>
-            <button type="submit" className="btn btn-primary">
-              {this.state.action === "deposit"
-                ? "Deposit"
-                : this.state.action === "recover"
-                ? "Recover"
-                : "Select Action"}
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
+  const onFormSubmit = async (e) => {
+    e.preventDefault();
+    const planID = Number(planId);
+    const fund = Number(fundPriceEth);
+    if (planID > 0 && planID <= plansCount) {
+      if (action !== "") {
+        setLoading(true);
+        try {
+          if (action === "recover") {
+            const tx = await writeContracts.SafexMain.recoverPlanFunds(planID);
+            txResult(tx);
+          } else if (action === "deposit") {
+            if (fund > 0 === true) {
+              const tx = await writeContracts.SafexMain.depositPlanFunds(planID, {
+                value: utils.parseEther(fundPriceEth),
+              });
+              txResult(tx);
+              setFundPriceEth("");
+            } else {
+              showAlert("Deposit fund should be more than 0!", "warning");
+            }
+          }
+        } catch (e) {
+          if (e.data !== undefined) {
+            const error = e.data.message.split(":")[2].split("revert ")[1];
+            showAlert(error + "!", "warning");
+          } else {
+            showAlert("Error!", "warning");
+          }
+        }
+      } else {
+        showAlert("Select an action!", "warning");
+      }
+    } else {
+      showAlert("Enter a valid plan id!", "warning");
+    }
+  };
+
+  return (
+    <>
+      <Note label="Note ">
+        Only owner of the plan can recover the funds, but anybody can deposit funds in any of the existing plans.
+      </Note>
+      <Spacer />
+      <Input status="secondary" type="number" onChange={(e) => setPlanId(e.target.value)} width="40%">
+        <Text b>Plan Id :</Text>
+      </Input>
+      <Spacer />
+      <Text b>Action :</Text>
+      <Select
+        placeholder="Choose one"
+        onChange={(val) => setAction(val)}
+        style={{ border: "1px solid #000", marginTop: "0.8rem", display: "block" }}
+        width="16%"
+      >
+        <Select.Option value="deposit">Deposit</Select.Option>
+        <Select.Option value="recover">Recover</Select.Option>
+      </Select>
+      <Spacer y={2} />
+      {action === "deposit" ? (
+        <>
+          <Input
+            placeholder="ETH"
+            status="secondary"
+            type="number"
+            onChange={(e) => setFundPriceEth(e.target.value)}
+            width="40%"
+          >
+            <Text b>Amount :</Text>
+          </Input>
+          <Spacer y={2} />
+        </>
+      ) : null}
+      {action !== "" ? (
+        <>
+          {!loading ? (
+            <Button type="secondary" auto onClick={onFormSubmit}>
+              {action === "deposit" ? "Deposit" : "Recover"}
+            </Button>
+          ) : (
+            <Button type="secondary" auto loading>
+              {action === "deposit" ? "Deposit" : "Recover"}
+            </Button>
+          )}
+        </>
+      ) : null}
+    </>
+  );
 }
+
+export default Funds;

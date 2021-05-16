@@ -1,15 +1,13 @@
 import React from "react";
+import { NETWORK } from "../../networks";
+import { Note } from "@geist-ui/react";
 
-const ContractsNotDeployed = () => {
+function ContractsNotDeployed({ localChainId, selectedChainId }) {
   return (
-    <div className="jumbotron">
-      <h4 style={{ textTransform: "none", fontWeight: "normal" }}>
-        SafexMain or AutoAppealableArbitrator Contract Not Deployed To This Network.
-      </h4>
-      <hr className="my-4" />
-      <p className="lead">Connect Metamask to Ropsten Testnet.</p>
-    </div>
+    <Note label="Note " style={{ width: "fit-content", marginTop: "1rem" }}>
+      You are on <b>{NETWORK(selectedChainId).name}</b> network, switch to <b>{NETWORK(localChainId).name}</b> network.
+    </Note>
   );
-};
+}
 
 export default ContractsNotDeployed;
