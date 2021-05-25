@@ -2,14 +2,14 @@ const ipfsPublish = async (fileName, data) => {
   const buffer = await Buffer.from(data);
 
   return new Promise((resolve, reject) => {
-    fetch("https://ipfs.kleros.io/add", {
-      method: "POST",
+    fetch('https://ipfs.kleros.io/add', {
+      method: 'POST',
       body: JSON.stringify({
         fileName,
         buffer,
       }),
       headers: {
-        "content-type": "application/json",
+        'content-type': 'application/json',
       },
     })
       .then((response) => response.json())

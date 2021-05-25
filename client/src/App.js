@@ -12,11 +12,11 @@ import ConnectWeb3Modal from './components/ConnectWeb3Modal/ConnectWeb3Modal';
 import SafexMainDetails from './components/SafexMainDetails/SafexMainDetails';
 import SubmitEvidence from './components/SubmitEvidence/SubmitEvidence';
 import CreateClaim from './components/CreateClaim/CreateClaim';
-import CreatePlan from './components/CreatePlan/CreatePlan';
+import CreateSafe from './components/CreateSafe/CreateSafe';
 import MyAccount from './components/MyAccount/MyAccount';
 import Claims from './components/Claims/Claims';
 import Funds from './components/Funds/Funds';
-import Plans from './components/Plans/Plans';
+import Safes from './components/Safes/Safes';
 
 const targetNetwork = NETWORKS['localhost'];
 const localProviderUrl = targetNetwork.rpcUrl;
@@ -62,7 +62,7 @@ function App() {
         </Col>
       </Row>
       {injectedProvider === undefined ? (
-        <Text>A claim resolution platform for all the safex plans</Text>
+        <Text>A claim resolution platform for all the safex safes</Text>
       ) : localChainId && selectedChainId && localChainId != selectedChainId ? (
         <ContractsNotDeployed localChainId={localChainId} selectedChainId={selectedChainId} />
       ) : (
@@ -76,8 +76,8 @@ function App() {
             <Tabs.Item label='account' value='2'>
               <MyAccount address={address} balance={balance} writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label='create plan' value='3'>
-              <CreatePlan network={targetNetwork.name} address={address} writeContracts={writeContracts} />
+            <Tabs.Item label='create safe' value='3'>
+              <CreateSafe network={targetNetwork.name} address={address} writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label='create claim' value='4'>
               <CreateClaim network={targetNetwork.name} writeContracts={writeContracts} />
@@ -88,8 +88,8 @@ function App() {
             <Tabs.Item label='funds' value='6'>
               <Funds writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label='plans' value='7'>
-              <Plans writeContracts={writeContracts} />
+            <Tabs.Item label='safes' value='7'>
+              <Safes writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label='claims' value='8'>
               <Claims writeContracts={writeContracts} />

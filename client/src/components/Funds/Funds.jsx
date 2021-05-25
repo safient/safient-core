@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { utils } from "ethers";
-import { Spacer, Text, Input, Button, useToasts, Note, Select } from "@geist-ui/react";
+import React, { useEffect, useState } from 'react';
+import { utils } from 'ethers';
+import { Spacer, Text, Input, Button, useToasts, Note, Select } from '@geist-ui/react';
 
 function Funds({ writeContracts }) {
-  const [plansCount, setPlansCount] = useState(0);
-  const [planId, setPlanId] = useState("");
-  const [action, setAction] = useState("");
-  const [fundPriceEth, setFundPriceEth] = useState("");
+  const [safesCount, setSafesCount] = useState(0);
+  const [safeId, setSafeId] = useState('');
+  const [action, setAction] = useState('');
+  const [fundPriceEth, setFundPriceEth] = useState('');
   const [loading, setLoading] = useState(false);
   const [toasts, setToast] = useToasts();
 
   useEffect(() => {
     async function init() {
-      const plansCount = await writeContracts.SafexMain.plansCount();
-      setPlansCount(Number(plansCount));
+      const safesCount = await writeContracts.SafexMain.safesCount();
+      setSafesCount(Number(safesCount));
     }
     init();
   }, [writeContracts]);
@@ -29,94 +29,94 @@ function Funds({ writeContracts }) {
   const txResult = async (tx) => {
     const txReceipt = await tx.wait();
     if (txReceipt.status === 1) {
-      showAlert("Transaction successful!", "success");
+      showAlert('Transaction successful!', 'success');
     } else if (txReceipt.status === 0) {
-      showAlert("Transaction rejected!", "warning");
+      showAlert('Transaction rejected!', 'warning');
     }
   };
 
   const onFormSubmit = async (e) => {
     e.preventDefault();
-    const planID = Number(planId);
+    const safeID = Number(safeId);
     const fund = Number(fundPriceEth);
-    if (planID > 0 && planID <= plansCount) {
-      if (action !== "") {
+    if (safeID > 0 && safeID <= safesCount) {
+      if (action !== '') {
         setLoading(true);
         try {
-          if (action === "recover") {
-            const tx = await writeContracts.SafexMain.recoverPlanFunds(planID);
+          if (action === 'recover') {
+            const tx = await writeContracts.SafexMain.recoverSafeFunds(safeID);
             txResult(tx);
-          } else if (action === "deposit") {
+          } else if (action === 'deposit') {
             if (fund > 0 === true) {
-              const tx = await writeContracts.SafexMain.depositPlanFunds(planID, {
+              const tx = await writeContracts.SafexMain.depositSafeFunds(safeID, {
                 value: utils.parseEther(fundPriceEth),
               });
               txResult(tx);
-              setFundPriceEth("");
+              setFundPriceEth('');
             } else {
-              showAlert("Deposit fund should be more than 0!", "warning");
+              showAlert('Deposit fund should be more than 0!', 'warning');
             }
           }
         } catch (e) {
           if (e.data !== undefined) {
-            const error = e.data.message.split(":")[2].split("revert ")[1];
-            showAlert(error + "!", "warning");
+            const error = e.data.message.split(':')[2].split('revert ')[1];
+            showAlert(error + '!', 'warning');
           } else {
-            showAlert("Error!", "warning");
+            showAlert('Error!', 'warning');
           }
         }
       } else {
-        showAlert("Select an action!", "warning");
+        showAlert('Select an action!', 'warning');
       }
     } else {
-      showAlert("Enter a valid plan id!", "warning");
+      showAlert('Enter a valid safe id!', 'warning');
     }
   };
 
   return (
     <>
-      <Note label="Note ">
-        Only owner of the plan can recover the funds, but anybody can deposit funds in any of the existing plans.
+      <Note label='Note '>
+        Only owner of the safe can recover the funds, but anybody can deposit funds in any of the existing safes.
       </Note>
       <Spacer />
-      <Input status="secondary" type="number" onChange={(e) => setPlanId(e.target.value)} width="40%">
-        <Text b>Plan Id :</Text>
+      <Input status='secondary' type='number' onChange={(e) => setSafeId(e.target.value)} width='40%'>
+        <Text b>Safe Id :</Text>
       </Input>
       <Spacer />
       <Text b>Action :</Text>
       <Select
-        placeholder="Choose one"
+        placeholder='Choose one'
         onChange={(val) => setAction(val)}
-        style={{ border: "1px solid #000", marginTop: "0.8rem", display: "block" }}
-        width="16%"
+        style={{ border: '1px solid #000', marginTop: '0.8rem', display: 'block' }}
+        width='16%'
       >
-        <Select.Option value="deposit">Deposit</Select.Option>
-        <Select.Option value="recover">Recover</Select.Option>
+        <Select.Option value='deposit'>Deposit</Select.Option>
+        <Select.Option value='recover'>Recover</Select.Option>
       </Select>
       <Spacer y={2} />
-      {action === "deposit" ? (
+      {action === 'deposit' ? (
         <>
           <Input
-            placeholder="ETH"
-            status="secondary"
-            type="number"
+            placeholder='ETH'
+            status='secondary'
+            type='number'
             onChange={(e) => setFundPriceEth(e.target.value)}
-            width="40%"
+            width='40%'
           >
             <Text b>Amount :</Text>
           </Input>
           <Spacer y={2} />
         </>
       ) : null}
-      {action !== "" ? (
+      {action !== '' ? (
         <>
           {!loading ? (
-            <Button type="secondary" auto onClick={onFormSubmit}>
-              {action === "deposit" ? "Deposit" : "Recover"}
+            <Button type='secondary' auto onClick={onFormSubmit}>
+              {action === 'deposit' ? 'Deposit' : 'Recover'}
             </Button>
           ) : (
-            <Button type="secondary" auto loading>
-              {action === "deposit" ? "Deposit" : "Recover"}
+            <Button type='secondary' auto loading>
+              {action === 'deposit' ? 'Deposit' : 'Recover'}
             </Button>
           )}
         </>

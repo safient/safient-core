@@ -13,18 +13,18 @@ contract SafexMain is IArbitrable, IEvidence {
     enum ClaimStatus {Active, Passed, Failed, Refused}
 
     /* Structs */
-    struct Plan {
-        uint256 planId;
-        address planCreatedBy;
-        address planCurrentOwner;
-        address planInheritor;
+    struct Safe {
+        uint256 safeId;
+        address safeCreatedBy;
+        address safeCurrentOwner;
+        address safeInheritor;
         uint256 metaEvidenceId;
         uint256 claimsCount;
-        uint256 planFunds;
+        uint256 safeFunds;
     }
 
     struct Claim {
-        uint256 planId;
+        uint256 safeId;
         uint256 disputeId;
         address claimedBy;
         uint256 metaEvidenceId;
@@ -38,12 +38,12 @@ contract SafexMain is IArbitrable, IEvidence {
 
     address public safexMainAdmin;
 
-    uint256 public plansCount = 0;
+    uint256 public safesCount = 0;
     uint256 public claimsCount = 0;
     uint256 public metaEvidenceID = 0;
     uint256 public evidenceGroupID = 0;
 
-    mapping(uint256 => Plan) public plans; // plans[planId] => plan, starts from 1
+    mapping(uint256 => Safe) public safes; // safes[safeId] => safe, starts from 1
     mapping(uint256 => Claim) public claims; // claims[disputeId] => claim, starts from 0 (because, disputeId starts from 0)
 
     /* Storage - Private */
@@ -66,8 +66,8 @@ contract SafexMain is IArbitrable, IEvidence {
         _;
     }
 
-    modifier planShouldExist(uint256 _planId) {
-        require(_planId <= plansCount, "Plan does not exist");
+    modifier safeShouldExist(uint256 _safeId) {
+        require(_safeId <= safesCount, "Safe does not exist");
         _;
     }
 
@@ -76,7 +76,7 @@ contract SafexMain is IArbitrable, IEvidence {
         _;
     }
 
-    modifier planCreationRequisite(
+    modifier safeCreationRequisite(
         address _inheritor,
         string calldata _metaEvidence
     ) {
@@ -86,48 +86,48 @@ contract SafexMain is IArbitrable, IEvidence {
         );
         require(
             bytes(_metaEvidence).length > 0,
-            "Should provide metaEvidence to create a plan"
+            "Should provide metaEvidence to create a safe"
         );
         require(
             _inheritor != address(0),
-            "Should provide an inheritor for the plan"
+            "Should provide an inheritor for the safe"
         );
         require(
             msg.sender != _inheritor,
-            "Plan creator should not be the inheritor of the plan"
+            "Safe creator should not be the inheritor of the safe"
         );
         _;
     }
 
     modifier claimCreationRequisite(
-        uint256 _planId,
+        uint256 _safeId,
         string calldata _evidence
     ) {
-        Plan memory plan = plans[_planId];
+        Safe memory safe = safes[_safeId];
 
         require(
-            plan.claimsCount < _totalClaimsAllowed,
-            "Total number of claims on a plan has reached the limit"
+            safe.claimsCount < _totalClaimsAllowed,
+            "Total number of claims on a safe has reached the limit"
         );
         require(
-            msg.sender == plan.planInheritor,
-            "Only inheritor of the plan can create the claim"
+            msg.sender == safe.safeInheritor,
+            "Only inheritor of the safe can create the claim"
         );
         require(
-            plan.planFunds >= arbitrator.arbitrationCost(""),
-            "Insufficient funds in the plan to pay the arbitration fee"
+            safe.safeFunds >= arbitrator.arbitrationCost(""),
+            "Insufficient funds in the safe to pay the arbitration fee"
         );
         _;
     }
 
-    modifier recoverPlanFundsRequisite(uint256 _planId) {
-        Plan memory plan = plans[_planId];
+    modifier recoverSafeFundsRequisite(uint256 _safeId) {
+        Safe memory safe = safes[_safeId];
 
         require(
-            msg.sender == plan.planCurrentOwner,
-            "Only plan owner can recover the deposit balance"
+            msg.sender == safe.safeCurrentOwner,
+            "Only safe owner can recover the deposit balance"
         );
-        require(plan.planFunds != 0, "No funds remaining in the plan");
+        require(safe.safeFunds != 0, "No funds remaining in the safe");
         _;
     }
 
@@ -147,15 +147,15 @@ contract SafexMain is IArbitrable, IEvidence {
     }
 
     /* Events */
-    event CreatePlan(
-        address indexed planCreatedBy,
-        address indexed planInheritor,
+    event CreateSafe(
+        address indexed safeCreatedBy,
+        address indexed safeInheritor,
         uint256 indexed metaEvidenceId
     );
 
     event CreateClaim(
         address indexed claimCreatedBy,
-        uint256 indexed planId,
+        uint256 indexed safeId,
         uint256 indexed disputeId
     );
 
@@ -168,41 +168,41 @@ contract SafexMain is IArbitrable, IEvidence {
     /* Functions - External */
     receive() external payable {}
 
-    function createPlan(address _inheritor, string calldata _metaEvidence)
+    function createSafe(address _inheritor, string calldata _metaEvidence)
         external
         payable
-        planCreationRequisite(_inheritor, _metaEvidence)
+        safeCreationRequisite(_inheritor, _metaEvidence)
     {
-        plansCount += 1;
+        safesCount += 1;
         metaEvidenceID += 1;
 
-        Plan memory plan = plans[plansCount];
-        plan = Plan({
-            planId: plansCount,
-            planCreatedBy: msg.sender,
-            planCurrentOwner: msg.sender,
-            planInheritor: _inheritor,
+        Safe memory safe = safes[safesCount];
+        safe = Safe({
+            safeId: safesCount,
+            safeCreatedBy: msg.sender,
+            safeCurrentOwner: msg.sender,
+            safeInheritor: _inheritor,
             metaEvidenceId: metaEvidenceID,
             claimsCount: 0,
-            planFunds: msg.value
+            safeFunds: msg.value
         });
-        plans[plansCount] = plan;
+        safes[safesCount] = safe;
 
         (bool sent, bytes memory data) =
             address(this).call{value: msg.value}("");
         require(sent, "Failed to send Ether");
 
         emit MetaEvidence(metaEvidenceID, _metaEvidence);
-        emit CreatePlan(msg.sender, _inheritor, metaEvidenceID);
+        emit CreateSafe(msg.sender, _inheritor, metaEvidenceID);
     }
 
-    function createClaim(uint256 _planId, string calldata _evidence)
+    function createClaim(uint256 _safeId, string calldata _evidence)
         external
         payable
-        planShouldExist(_planId)
-        claimCreationRequisite(_planId, _evidence)
+        safeShouldExist(_safeId)
+        claimCreationRequisite(_safeId, _evidence)
     {
-        Plan memory plan = plans[_planId];
+        Safe memory safe = safes[_safeId];
 
         uint256 disputeID =
             arbitrator.createDispute{value: arbitrator.arbitrationCost("")}(
@@ -215,16 +215,16 @@ contract SafexMain is IArbitrable, IEvidence {
         emit Dispute(
             arbitrator,
             disputeID,
-            plan.metaEvidenceId,
+            safe.metaEvidenceId,
             evidenceGroupID
         );
 
         Claim memory claim = claims[disputeID];
         claim = Claim({
-            planId: _planId,
+            safeId: _safeId,
             disputeId: disputeID,
             claimedBy: msg.sender,
-            metaEvidenceId: plan.metaEvidenceId,
+            metaEvidenceId: safe.metaEvidenceId,
             evidenceGroupId: evidenceGroupID,
             status: ClaimStatus.Active,
             result: "Active"
@@ -233,11 +233,11 @@ contract SafexMain is IArbitrable, IEvidence {
 
         claimsCount += 1;
 
-        emit CreateClaim(msg.sender, _planId, disputeID);
+        emit CreateClaim(msg.sender, _safeId, disputeID);
 
-        plan.claimsCount += 1;
-        plan.planFunds -= arbitrator.arbitrationCost("");
-        plans[_planId] = plan;
+        safe.claimsCount += 1;
+        safe.safeFunds -= arbitrator.arbitrationCost("");
+        safes[_safeId] = safe;
 
         if (bytes(_evidence).length != 0) {
             submitEvidence(disputeID, _evidence);
@@ -268,31 +268,31 @@ contract SafexMain is IArbitrable, IEvidence {
         emit Ruling(IArbitrator(msg.sender), _disputeID, _ruling);
     }
 
-    function depositPlanFunds(uint256 _planId)
+    function depositSafeFunds(uint256 _safeId)
         external
         payable
-        planShouldExist(_planId)
+        safeShouldExist(_safeId)
     {
-        Plan memory plan = plans[_planId];
-        plan.planFunds += msg.value;
-        plans[_planId] = plan;
+        Safe memory safe = safes[_safeId];
+        safe.safeFunds += msg.value;
+        safes[_safeId] = safe;
 
         (bool sent, bytes memory data) =
             address(this).call{value: msg.value}("");
         require(sent, "Failed to send Ether");
     }
 
-    function recoverPlanFunds(uint256 _planId)
+    function recoverSafeFunds(uint256 _safeId)
         external
-        planShouldExist(_planId)
-        recoverPlanFundsRequisite(_planId)
+        safeShouldExist(_safeId)
+        recoverSafeFundsRequisite(_safeId)
     {
-        Plan memory plan = plans[_planId];
+        Safe memory safe = safes[_safeId];
 
-        uint256 blanceAmount = plan.planFunds;
+        uint256 blanceAmount = safe.safeFunds;
 
-        plan.planFunds = 0;
-        plans[_planId] = plan;
+        safe.safeFunds = 0;
+        safes[_safeId] = safe;
 
         address _to = msg.sender;
 
