@@ -22,7 +22,7 @@ module.exports = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "planId",
+        "name": "safeId",
         "type": "uint256"
       },
       {
@@ -41,13 +41,13 @@ module.exports = [
       {
         "indexed": true,
         "internalType": "address",
-        "name": "planCreatedBy",
+        "name": "safeCreatedBy",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "planInheritor",
+        "name": "safeInheritor",
         "type": "address"
       },
       {
@@ -57,7 +57,7 @@ module.exports = [
         "type": "uint256"
       }
     ],
-    "name": "CreatePlan",
+    "name": "CreateSafe",
     "type": "event"
   },
   {
@@ -191,7 +191,7 @@ module.exports = [
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "planId",
+        "name": "safeId",
         "type": "uint256"
       },
       {
@@ -245,7 +245,7 @@ module.exports = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_planId",
+        "name": "_safeId",
         "type": "uint256"
       },
       {
@@ -272,7 +272,7 @@ module.exports = [
         "type": "string"
       }
     ],
-    "name": "createPlan",
+    "name": "createSafe",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -281,11 +281,11 @@ module.exports = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_planId",
+        "name": "_safeId",
         "type": "uint256"
       }
     ],
-    "name": "depositPlanFunds",
+    "name": "depositSafeFunds",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -346,73 +346,11 @@ module.exports = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_safeId",
         "type": "uint256"
       }
     ],
-    "name": "plans",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "planId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "planCreatedBy",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "planCurrentOwner",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "planInheritor",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "metaEvidenceId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "claimsCount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "planFunds",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "plansCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_planId",
-        "type": "uint256"
-      }
-    ],
-    "name": "recoverPlanFunds",
+    "name": "recoverSafeFunds",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -433,6 +371,68 @@ module.exports = [
     "name": "rule",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "safes",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "safeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "safeCreatedBy",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "safeCurrentOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "safeInheritor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "metaEvidenceId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "claimsCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "safeFunds",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "safesCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

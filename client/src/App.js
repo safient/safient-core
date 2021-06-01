@@ -13,23 +13,22 @@ import {loginUserWithChallenge} from "./utils/threadDB"
 import {getLoginUser, getSafeData} from './lib/safientDB'
 import {PrivateKey} from "@textile/hub"
 
-import ContractsNotDeployed from "./components/ContractsNotDeployed/ContractsNotDeployed";
-import ConnectWeb3Modal from "./components/ConnectWeb3Modal/ConnectWeb3Modal";
-import SafexMainDetails from "./components/SafexMainDetails/SafexMainDetails";
-import SubmitEvidence from "./components/SubmitEvidence/SubmitEvidence";
-import CreateClaim from "./components/CreateClaim/CreateClaim";
-import CreatePlan from "./components/CreatePlan/CreatePlan";
-import MyAccount from "./components/MyAccount/MyAccount";
-import Claims from "./components/Claims/Claims";
-import Funds from "./components/Funds/Funds";
-import Plans from "./components/Plans/Plans";
+import ContractsNotDeployed from './components/ContractsNotDeployed/ContractsNotDeployed';
+import ConnectWeb3Modal from './components/ConnectWeb3Modal/ConnectWeb3Modal';
+import SafexMainDetails from './components/SafexMainDetails/SafexMainDetails';
+import SubmitEvidence from './components/SubmitEvidence/SubmitEvidence';
+import CreateClaim from './components/CreateClaim/CreateClaim';
+import CreateSafe from './components/CreateSafe/CreateSafe';
+import MyAccount from './components/MyAccount/MyAccount';
+import Claims from './components/Claims/Claims';
+import Funds from './components/Funds/Funds';
+import Safes from './components/Safes/Safes';
 import Profile from "./components/Profile/Profile";
 import Content from "./components/Safes/Content";
 
-const targetNetwork = NETWORKS["localhost"];
+const targetNetwork = NETWORKS['localhost'];
 const localProviderUrl = targetNetwork.rpcUrl;
-const localProviderUrlFromEnv = process.env.REACT_APP_PROVIDER ? process.env.REACT_APP_PROVIDER : localProviderUrl;
-const localProvider = new StaticJsonRpcProvider(localProviderUrlFromEnv);
+const localProvider = new StaticJsonRpcProvider(localProviderUrl);
 
 function App() {
   const [injectedProvider, setInjectedProvider] = useState();
@@ -89,8 +88,8 @@ function App() {
   // }, [loadWeb3Modal]);
 
   return (
-    <Page size="large">
-      <Row align="middle">
+    <Page size='large'>
+      <Row align='middle'>
         <Col span={20}>
           <Page.Header>
             <Text h2>Safex Claims</Text>
@@ -100,35 +99,37 @@ function App() {
           <ConnectWeb3Modal web3Modal={web3Modal} loadWeb3Modal={loadWeb3Modal} logoutOfWeb3Modal={logoutOfWeb3Modal} />
         </Col>
       </Row>
-      {localChainId && selectedChainId && localChainId !== selectedChainId ? (
+      {injectedProvider === undefined ? (
+        <Text>A claim resolution platform for all the safex safes</Text>
+      ) : localChainId && selectedChainId && localChainId != selectedChainId ? (
         <ContractsNotDeployed localChainId={localChainId} selectedChainId={selectedChainId} />
       ) : (
         <>
           <Spacer y={1} />
-          <Tabs initialValue="2">
+          <Tabs initialValue='2'>
             <Spacer y={1} />
-            <Tabs.Item label="safex" value="1">
+            <Tabs.Item label='safex' value='1'>
               <SafexMainDetails writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label="account" value="2">
+            <Tabs.Item label='account' value='2'>
               <MyAccount address={address} balance={balance} writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label="create plan" value="3">
-              <CreatePlan network={targetNetwork.name} address={address} writeContracts={writeContracts} />
+            <Tabs.Item label='create safe' value='3'>
+              <CreateSafe network={targetNetwork.name} address={address} writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label="create claim" value="4">
+            <Tabs.Item label='create claim' value='4'>
               <CreateClaim network={targetNetwork.name} writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label="submit evidence" value="5">
+            <Tabs.Item label='submit evidence' value='5'>
               <SubmitEvidence writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label="funds" value="6">
+            <Tabs.Item label='funds' value='6'>
               <Funds writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label="plans" value="7">
-              <Plans writeContracts={writeContracts} />
+            <Tabs.Item label='safes' value='7'>
+              <Safes writeContracts={writeContracts} />
             </Tabs.Item>
-            <Tabs.Item label="claims" value="8">
+            <Tabs.Item label='claims' value='8'>
               <Claims writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label="Safe" value="9">
@@ -154,7 +155,7 @@ const web3Modal = new Web3Modal({
       },
     },
   },
-  theme: "dark",
+  theme: 'dark',
 });
 
 const logoutOfWeb3Modal = async () => {
@@ -165,7 +166,7 @@ const logoutOfWeb3Modal = async () => {
 };
 
 window.ethereum &&
-  window.ethereum.on("chainChanged", (chainId) => {
+  window.ethereum.on('chainChanged', (chainId) => {
     web3Modal.cachedProvider &&
       setTimeout(() => {
         window.location.reload();
@@ -173,7 +174,7 @@ window.ethereum &&
   });
 
 window.ethereum &&
-  window.ethereum.on("accountsChanged", (accounts) => {
+  window.ethereum.on('accountsChanged', (accounts) => {
     web3Modal.cachedProvider &&
       setTimeout(() => {
         window.location.reload();

@@ -10,6 +10,8 @@
     "chain": "hardhat node",
     "test": "hardhat test --network hardhat",
     "deploy": "hardhat run scripts/deploy.js && hardhat run scripts/publish.js",
+    "wallet": "hardhat wallet",
+    "fundedwallet": "hardhat fundedwallet",
     "generate": "hardhat generate",
     "account": "hardhat account"
   },

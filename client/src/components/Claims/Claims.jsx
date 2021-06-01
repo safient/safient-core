@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useToasts, Table, Tag } from "@geist-ui/react";
+import React, { useEffect, useState } from 'react';
+import { useToasts, Table, Tag } from '@geist-ui/react';
 
 function Claims({ writeContracts }) {
   const [claims, setClaims] = useState([]);
@@ -27,10 +27,10 @@ function Claims({ writeContracts }) {
         });
       } catch (e) {
         if (e.data !== undefined) {
-          const error = e.data.message.split(":")[2].split("revert ")[1];
-          showAlert(error + "!", "warning");
+          const error = e.data.message.split(':')[2].split('revert ')[1];
+          showAlert(error + '!', 'warning');
         } else {
-          showAlert("Error!", "warning");
+          showAlert('Error!', 'warning');
         }
       }
     }
@@ -42,22 +42,22 @@ function Claims({ writeContracts }) {
       let newData = [];
       claims.map((claim) => {
         const dataItem = {
-          planId: String(claim.planId),
+          safeId: String(claim.safeId),
           disputeId: String(claim.disputeId),
-          claimedBy: claim.claimedBy.substr(0, 5) + "..." + claim.claimedBy.slice(claim.claimedBy.length - 5),
+          claimedBy: claim.claimedBy.substr(0, 5) + '...' + claim.claimedBy.slice(claim.claimedBy.length - 5),
           result:
-            (claim.result === "Active" && (
-              <Tag type="secondary" invert>
+            (claim.result === 'Active' && (
+              <Tag type='secondary' invert>
                 Active
               </Tag>
             )) ||
-            (claim.result === "Passed" && (
-              <Tag type="success" invert>
+            (claim.result === 'Passed' && (
+              <Tag type='success' invert>
                 Passed
               </Tag>
             )) ||
-            (claim.result === "Failed" && (
-              <Tag type="error" invert>
+            (claim.result === 'Failed' && (
+              <Tag type='error' invert>
                 Failed
               </Tag>
             )),
@@ -72,10 +72,10 @@ function Claims({ writeContracts }) {
   return (
     <>
       <Table data={data}>
-        <Table.Column prop="planId" label="Plan Id" />
-        <Table.Column prop="disputeId" label="Dispute Id" />
-        <Table.Column prop="claimedBy" label="Claimed By" />
-        <Table.Column prop="result" label="Status" />
+        <Table.Column prop='safeId' label='Safe Id' />
+        <Table.Column prop='disputeId' label='Dispute Id' />
+        <Table.Column prop='claimedBy' label='Claimed By' />
+        <Table.Column prop='result' label='Status' />
       </Table>
     </>
   );
