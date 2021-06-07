@@ -6,7 +6,7 @@ import {loginUserWithChallenge} from "../../utils/threadDB";
 import {generateCipherKey} from "../../utils/aes"
 
 
-function Profile({ idx, identity, user, userData,setUser,setUserData  }) {
+function Profile({ idx, identity, user, userData,setUser,setUserData, address  }) {
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
     const [modal, setModal] = useState(false);
@@ -23,7 +23,7 @@ function Profile({ idx, identity, user, userData,setUser,setUserData  }) {
 
 const handleSubmit = async () => {
     //ceramic and threaddb
-    const aesKey = await generateCipherKey();
+    // const aesKey = await generateCipherKey();
     if (idx) {
       setLoading(true);
 
@@ -37,7 +37,7 @@ const handleSubmit = async () => {
             email: email,
           });
 
-          const threadRes = await registerNewUser(idx.id, name, email, 0);
+          const threadRes = await registerNewUser(idx.id, address, name, email, 0);
 
           setUserData(threadRes);
           if (ceramicRes && threadRes) {

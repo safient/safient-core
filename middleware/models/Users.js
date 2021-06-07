@@ -5,6 +5,7 @@ const Users = {
     properties: {
         _id: {type:'string'},
         did: {type:'string'},
+        address: {type: 'string'},
         name: {type: 'string'},
         email: {type: 'string'},
         safes: {type:'array'}

@@ -14,7 +14,7 @@ contract SafexMain is IArbitrable, IEvidence {
 
     /* Structs */
     struct Safe {
-        uint256 safeId;
+        string safeId;
         address safeCreatedBy;
         address safeCurrentOwner;
         address safeInheritor;
@@ -24,7 +24,7 @@ contract SafexMain is IArbitrable, IEvidence {
     }
 
     struct Claim {
-        uint256 safeId;
+        string safeId;
         uint256 disputeId;
         address claimedBy;
         uint256 metaEvidenceId;
@@ -43,7 +43,7 @@ contract SafexMain is IArbitrable, IEvidence {
     uint256 public metaEvidenceID = 0;
     uint256 public evidenceGroupID = 0;
 
-    mapping(uint256 => Safe) public safes; // safes[safeId] => safe, starts from 1
+    mapping(string => Safe) public safes; // safes[safeId] => safe, starts from 1
     mapping(uint256 => Claim) public claims; // claims[disputeId] => claim, starts from 0 (because, disputeId starts from 0)
 
     /* Storage - Private */
@@ -66,10 +66,10 @@ contract SafexMain is IArbitrable, IEvidence {
         _;
     }
 
-    modifier safeShouldExist(uint256 _safeId) {
-        require(_safeId <= safesCount, "Safe does not exist");
-        _;
-    }
+    // modifier safeShouldExist(uint256 _safeId) {
+    //     require(_safeId <= safesCount, "Safe does not exist");
+    //     _;
+    // }
 
     modifier shouldBeValidRuling(uint256 _ruling) {
         require(_ruling <= RULING_OPTIONS, "Ruling out of bounds!");
@@ -100,7 +100,7 @@ contract SafexMain is IArbitrable, IEvidence {
     }
 
     modifier claimCreationRequisite(
-        uint256 _safeId,
+        string memory _safeId,
         string calldata _evidence
     ) {
         Safe memory safe = safes[_safeId];
@@ -120,7 +120,7 @@ contract SafexMain is IArbitrable, IEvidence {
         _;
     }
 
-    modifier recoverSafeFundsRequisite(uint256 _safeId) {
+    modifier recoverSafeFundsRequisite(string memory _safeId) {
         Safe memory safe = safes[_safeId];
 
         require(
@@ -155,7 +155,7 @@ contract SafexMain is IArbitrable, IEvidence {
 
     event CreateClaim(
         address indexed claimCreatedBy,
-        uint256 indexed safeId,
+        string indexed safeId,
         uint256 indexed disputeId
     );
 
@@ -168,17 +168,16 @@ contract SafexMain is IArbitrable, IEvidence {
     /* Functions - External */
     receive() external payable {}
 
-    function createSafe(address _inheritor, string calldata _metaEvidence)
+    function createSafe(address _inheritor, string memory safeID, string calldata _metaEvidence)
         external
         payable
         safeCreationRequisite(_inheritor, _metaEvidence)
     {
-        safesCount += 1;
         metaEvidenceID += 1;
 
-        Safe memory safe = safes[safesCount];
+        Safe memory safe = safes[safeID];
         safe = Safe({
-            safeId: safesCount,
+            safeId: safeID,
             safeCreatedBy: msg.sender,
             safeCurrentOwner: msg.sender,
             safeInheritor: _inheritor,
@@ -186,7 +185,7 @@ contract SafexMain is IArbitrable, IEvidence {
             claimsCount: 0,
             safeFunds: msg.value
         });
-        safes[safesCount] = safe;
+        safes[safeID] = safe;
 
         (bool sent, bytes memory data) =
             address(this).call{value: msg.value}("");
@@ -196,10 +195,9 @@ contract SafexMain is IArbitrable, IEvidence {
         emit CreateSafe(msg.sender, _inheritor, metaEvidenceID);
     }
 
-    function createClaim(uint256 _safeId, string calldata _evidence)
+    function createClaim(string memory _safeId, string calldata _evidence)
         external
         payable
-        safeShouldExist(_safeId)
         claimCreationRequisite(_safeId, _evidence)
     {
         Safe memory safe = safes[_safeId];
@@ -268,10 +266,9 @@ contract SafexMain is IArbitrable, IEvidence {
         emit Ruling(IArbitrator(msg.sender), _disputeID, _ruling);
     }
 
-    function depositSafeFunds(uint256 _safeId)
+    function depositSafeFunds(string memory _safeId)
         external
         payable
-        safeShouldExist(_safeId)
     {
         Safe memory safe = safes[_safeId];
         safe.safeFunds += msg.value;
@@ -282,9 +279,8 @@ contract SafexMain is IArbitrable, IEvidence {
         require(sent, "Failed to send Ether");
     }
 
-    function recoverSafeFunds(uint256 _safeId)
+    function recoverSafeFunds(string memory _safeId)
         external
-        safeShouldExist(_safeId)
         recoverSafeFundsRequisite(_safeId)
     {
         Safe memory safe = safes[_safeId];

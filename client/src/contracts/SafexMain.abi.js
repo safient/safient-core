@@ -21,9 +21,9 @@ module.exports = [
       },
       {
         "indexed": true,
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "safeId",
-        "type": "uint256"
+        "type": "string"
       },
       {
         "indexed": true,
@@ -190,9 +190,9 @@ module.exports = [
     "name": "claims",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "safeId",
-        "type": "uint256"
+        "type": "string"
       },
       {
         "internalType": "uint256",
@@ -244,9 +244,9 @@ module.exports = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "_safeId",
-        "type": "uint256"
+        "type": "string"
       },
       {
         "internalType": "string",
@@ -268,6 +268,11 @@ module.exports = [
       },
       {
         "internalType": "string",
+        "name": "safeID",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
         "name": "_metaEvidence",
         "type": "string"
       }
@@ -280,9 +285,9 @@ module.exports = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "_safeId",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "name": "depositSafeFunds",
@@ -345,9 +350,9 @@ module.exports = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "_safeId",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "name": "recoverSafeFunds",
@@ -376,17 +381,17 @@ module.exports = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "",
-        "type": "uint256"
+        "type": "string"
       }
     ],
     "name": "safes",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string",
         "name": "safeId",
-        "type": "uint256"
+        "type": "string"
       },
       {
         "internalType": "address",

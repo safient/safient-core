@@ -114,7 +114,7 @@ const useStyles = makeStyles((ui) => ({
   },
 }));
 
-const Content = ({ idx, user, userData }) => {
+const Content = ({ idx, user, userData, network, address, writeContracts, arbitrationFee }) => {
   const [caller, setCaller] = useState(null);
   const [userArray, setUserArray] = useState([{}]);
 
@@ -176,6 +176,9 @@ const Content = ({ idx, user, userData }) => {
         setSearchResults={setSearchResults}
         caller={caller}
         requested={requested}
+        network={network}
+        address={address}
+        writeContracts={writeContracts}
       />
       {/* <TestModal searchResults={searchResults} /> */}
       <Safe
@@ -184,6 +187,10 @@ const Content = ({ idx, user, userData }) => {
         safe={selectedPortfolio}
         user={user}
         setSafeModal={setPortfolioModal}
+        network={network}
+        address={address}
+        writeContracts={writeContracts}
+        arbitrationFee={arbitrationFee}
       />
       <div className={classes.root}>
         <div className={classes.content}>

@@ -7,7 +7,7 @@ import { hashSync } from 'bcryptjs'
 import KeyDidResolver from 'key-did-resolver'
 import { DID } from 'dids'
 
-const CERAMIC_URL = 'https://ceramic.signchain.xyz'
+const CERAMIC_URL = 'http://0.0.0.0:7007'
 
 
 export const generateIDX = async (seed) => {

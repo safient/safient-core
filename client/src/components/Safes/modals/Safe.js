@@ -10,6 +10,7 @@ import {
   Spinner,
   Tag,
   Text,
+  Input
 } from '@geist-ui/react';
 import * as Icons from 'react-feather';
 import makeStyles from '../makeStyles';
@@ -17,6 +18,15 @@ import makeStyles from '../makeStyles';
 import { decryptData } from '../../../utils/aes';
 import { getSafeData, claimSafe, decryptShards } from '../../../lib/safientDB';
 import shamirs from "shamirs-secret-sharing"
+import { utils } from 'ethers';
+import ipfsPublish from '../../../ipfs/ipfsPublish';
+import Archon from '@kleros/archon';
+import Loader from './Loader';
+
+
+
+
+
 const useStyles = makeStyles((ui) => ({
   content: {
     display: 'flex',
@@ -124,13 +134,29 @@ const useStyles = makeStyles((ui) => ({
   },
 }));
 
-function Safe({ state, idx, safe, user, setSafeModal }) {
+function Safe({ state, idx, safe, user, setSafeModal, network, address, writeContracts, arbitrationFee }) {
   const [safeData, setSafeData] = useState({});
   const [showSafe, setSafeShow] = useState(false);
   const [modal, setModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loaderData, setLoaderData] = useState({});
   const [safeType, setSafeType] = useState(null)
   const [shard, setShard] = useState(null)
+  const [buffer, setBuffer] = useState(null);
+  const [fileName, setFileName] = useState(null);
+  const [fileExtension, setFileExtension] = useState(null);
+  const [evidenceName, setEvidenceName] = useState("Test Evidence");
+  const [evidenceDescription, setEvidenceDescription] = useState("Evidence description to claim the safe");
+
+  const stages = {
+    "ACTIVE" : 0,
+    "CLAIMING": 1,
+    "RECOVERING": 2,
+    "RECOVERED": 3,
+    "CLAIMED": 4
+  }
+
+  const encoder = new TextEncoder();
 
 
   useEffect(() => {
@@ -165,7 +191,7 @@ function Safe({ state, idx, safe, user, setSafeModal }) {
             let shards = []
             let res
 
-              safeData.encSafeKeyShards.map(share =>{
+              safeData.encSafeKeyShards.map(share => {
               console.log(share)
               share.status === 1 ? shards.push(share.decData) : null
             })
@@ -201,20 +227,85 @@ function Safe({ state, idx, safe, user, setSafeModal }) {
     loadSafe();
   }, [state, idx, safe]);
 
-  const handleClaim = async () => {
-    if(safe.safeId){
-      const res = await claimSafe(safe.safeId)
-      console.log(res)
-    }
+  const captureFile = (event) => {
+    event.preventDefault();
+    const file = event.target.files[0];
+    setFileName(file.name);
+    setFileExtension(file.name.split('.')[1]);
+    const reader = new window.FileReader();
+    reader.readAsArrayBuffer(file);
+    reader.onloadend = () => {
+      setBuffer(Buffer(reader.result));
+    };
+  };
+
+
+  const createEvidenceURI = async (fileName, buffer) => {
+    const fileCid = await ipfsPublish(fileName, buffer);
+          const fileURI = `/ipfs/${fileCid[1].hash}${fileCid[0].path}`;
+          const evidenceObj = {
+            fileURI,
+            fileHash: fileCid[1].hash,
+            fileTypeExtension: fileExtension,
+            name: evidenceName,
+            description: evidenceDescription,
+          };
+          const cid = await ipfsPublish('evidence.json', encoder.encode(JSON.stringify(evidenceObj)));
+          const evidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
+          return evidenceURI
   }
+  const handleClaim = async (e) => {
+    e.preventDefault()
+    try{
+      if(safe.safeId && buffer!==null){
+        setLoaderData({
+          heading: 'Creating Claim  ',
+          content: 'Creating Claim',
+        });
+        setLoading(true);
+        const evidenceURI = await createEvidenceURI(fileName, buffer)
+        console.log(evidenceURI)
+        const tx = await writeContracts.SafexMain.createClaim(safe.safeId, evidenceURI);
+        const txReceipt = await tx.wait();
+        console.log(txReceipt)
+
+        if(txReceipt.status === 1){
+          let disputeId = txReceipt.events[2].args[2]
+         
+          console.log(disputeId._hex)
+          console.log("Transaction successful")
+          const res = await claimSafe(safe.safeId, idx.id, parseInt(disputeId._hex))
+          console.log(res)
+          setLoading(false);
+        }
+        else{
+          setLoaderData({
+            heading: 'Something went wrong!',
+            content: 'Transaction Failed! Retry again!',
+          });
+          setLoading(false);
+        }
+        //contract interaction to create claim. 
+        //use claimSafe itself to create claim and write into it
+        
+      }
+    }catch(e){
+      console.log(e)
+    }
+
+  }
+
+  
 
   const handleRecover = async () => {
     if(safe.safeId){
+      //use decryptShards check of anyone of the shards are decrypted and change stage to 3 
       const res = await decryptShards(idx, safe.safeId, shard)
       console.log(res)
     }
   }
 
+  // Need a new handler to handle last stage claimed. 
 
   const closeHandler = (event) => {
     setModal(false);
@@ -224,6 +315,11 @@ function Safe({ state, idx, safe, user, setSafeModal }) {
 
   return (
     <>
+    <Loader
+        loading={loading}
+        heading={loaderData.heading}
+        content={loaderData.content}
+      />
       <Modal width={'55%'} height={'auto'} open={modal} onClose={closeHandler}>
         <Modal.Title>Safe details</Modal.Title>
 
@@ -285,9 +381,12 @@ function Safe({ state, idx, safe, user, setSafeModal }) {
                             {
                               safeType === "inheritor" ? 
                               <>
-                              <Button auto type='success' size='mini' onClick={handleClaim} >
+                              <Button auto type='success' size='mini' onClick={(e) => handleClaim(e)} >
                                 Claim
                               </Button>
+                              <Input type='file' onChange={captureFile} width='70%'>
+                                <Text b>Upload File :</Text>
+                              </Input>
                               </>
                               :
                               <>
