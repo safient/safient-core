@@ -1,8 +1,8 @@
 import { getCredentials } from "../utils/threadDB"
-
+import {generateRecoveryMessage} from "../utils/messageEntropy"
 const { Client, Where, ThreadID } = require('@textile/hub')
 const shamirs = require("shamirs-secret-sharing");
-
+const {utils} = require("ethers")
 const safeStages = {
     "ACTIVE" : 0,
     "CLAIMING": 1,
@@ -278,19 +278,22 @@ export const randomGuardians = async (creatorDID, inheritorDID) => {
             loopValue = guardians.length
         }
     }
-    console.log(guardians)
    return guardians
 }
 
 
-export const createNewSafe = async function(creator, inheritor, encryptedKey, recipentEnc, encryptedData,idx ){
+export const createNewSafe = async function(creator, inheritor, encryptedKey, recipentEnc, encryptedData,idx, injectedProvider, address ){
     try {
 
         //generate aes key for the user
         const {threadDb, client} = await getCredentials()
         const threadId = ThreadID.fromBytes(threadDb)
+        const signer = injectedProvider.getSigner();
 
-        const secretShares = shamirs.split(JSON.stringify(recipentEnc), {shares: 3, threshold: 2})
+        const creatorQuery = new Where('did').eq(creator)
+        const inheritorQuery = new Where('did').eq(inheritor)
+        let creatorUser = await client.find(threadId, 'Users', creatorQuery)
+        let recipientUser = await client.find(threadId, 'Users', inheritorQuery)
 
 
         const guardians = await randomGuardians(creator, inheritor)
@@ -298,11 +301,24 @@ export const createNewSafe = async function(creator, inheritor, encryptedKey, re
         const guardianOne = await getLoginUser(guardians[0]);
         const guardianTwo = await getLoginUser(guardians[1]);
         const guardianThree = await getLoginUser(guardians[2]);
-        console.log(guardianOne.safes)
 
-        const shardOne = await idx.ceramic.did.createDagJWE(secretShares[0], [guardians[0]]);
-        const shardTwo = await idx.ceramic.did.createDagJWE(secretShares[1], [guardians[1]]);
-        const shardThree = await idx.ceramic.did.createDagJWE(secretShares[2], [guardians[2]]);
+
+        const recoveryProofData = generateRecoveryMessage([guardianOne.address, guardianTwo.address, guardianThree.address]);
+        console.log(recoveryProofData)
+        const signature = await signer.signMessage(utils.arrayify(recoveryProofData.hash));
+
+        const Sharedata = {
+            recipentEnc: recipentEnc,
+            message : JSON.parse(recoveryProofData.recoveryMessage),
+            signature: signature
+        }
+
+        const secretShares = shamirs.split(JSON.stringify(Sharedata), {shares: 3, threshold: 2})
+
+        
+        const shardOne = await idx.ceramic.did.createDagJWE({share:secretShares[0], secret: recoveryProofData.secrets[0]}, [guardians[0]]);
+        const shardTwo = await idx.ceramic.did.createDagJWE({share:secretShares[1], secret:recoveryProofData.secrets[1]}, [guardians[1]]);
+        const shardThree = await idx.ceramic.did.createDagJWE({share:secretShares[2], secret:recoveryProofData.secrets[2]}, [guardians[2]]);
 
         const shardData = [
             {
@@ -335,10 +351,7 @@ export const createNewSafe = async function(creator, inheritor, encryptedKey, re
         const safe = await client.create(threadId, 'Safes', [data])
         console.log(safe)
 
-        const creatorQuery = new Where('did').eq(creator)
-        const inheritorQuery = new Where('did').eq(inheritor)
-        let creatorUser = await client.find(threadId, 'Users', creatorQuery)
-        let recipientUser = await client.find(threadId, 'Users', inheritorQuery)
+        
 
         console.log(creatorUser)
 
@@ -449,8 +462,8 @@ export const claimSafe = async (safeId, did, disputeId) => {
        console.log(result)
 
         if(result[0].stage === 0){
-            result[0].stage = safeStages.CLAIMING
-           result[0].claims = [{
+            result[0].stage = 1
+            result[0].claims = [{
             "createdBy": did,
             "claimStatus": claimStages.ACTIVE,
             "disputeID": disputeId
@@ -467,7 +480,7 @@ export const claimSafe = async (safeId, did, disputeId) => {
 }
 
 
-export const updateSafeRuling = async (safeId, ruling) => {
+export const updateStage = async (safeId, claim, safe) => {
     // claim metaData ={
     //     claimedBy: recipientDID,
     //     claimStatus: status of the claim,
@@ -477,15 +490,12 @@ export const updateSafeRuling = async (safeId, ruling) => {
         const query = new Where('_id').eq(safeId)
         const threadId = ThreadID.fromBytes(threadDb)
         const result = await client.find(threadId, 'Safes', query)
-
-       console.log(result)
-
-        if(result[0].stage === safeStages.CLAIMING){
-            result[0].stage = safeStages.RECOVERING
-           result[0].claims.claimStatus = ruling
-        }
+        console.log(result);
+        result[0].stage = safe
+        result[0].claims.claimStatus = claim
+        
         await client.save(threadId,'Safes',[result[0]])
-        console.log("Claim added to threadDB")
+        console.log("Stage updated for updateStage function")
         return true
     }catch(err){
         console.log(err)
@@ -493,24 +503,50 @@ export const updateSafeRuling = async (safeId, ruling) => {
     }       
 }
 
-export const decryptShards = async (idx, safeId, shard) => {
+export const decryptShards = async (idx, safeId, shard, address) => {
     const {client, threadDb} = await getCredentials()
     try{
         const query = new Where('_id').eq(safeId)
         const threadId = ThreadID.fromBytes(threadDb)
         const result = await client.find(threadId, 'Safes', query)
 
-        if(result[0].stage === safeStages.ACTIVE) {
-            result[0].stage = safeStages.RECOVERING
+        let Recoverycount = 0; 
+
+       
+
+
+        if(result[0].stage === safeStages.RECOVERING) {
+            const decShard = await idx.ceramic.did.decryptDagJWE(
+                result[0].encSafeKeyShards[shard].encShard
+              )
+            result[0].encSafeKeyShards[shard].status = 1
+            result[0].encSafeKeyShards[shard].decData = decShard
+            
+            result[0].encSafeKeyShards.map((safeShard) => {
+                if(safeShard.status === 1){
+                    Recoverycount = Recoverycount + 1;
+                }
+            })
+            console.log(Recoverycount)
+
+            if(Recoverycount >= 2){
+                result[0].stage = safeStages.RECOVERED
+                console.log("Stage changed")
+            }else{
+                result[0].stage =safeStages.RECOVERING
+            }
+
+
+            await client.save(threadId,'Safes',[result[0]])
         }
 
-        const decShard = await idx.ceramic.did.decryptDagJWE(
-            result[0].encSafeKeyShards[shard].encShard
-          )
-        result[0].encSafeKeyShards[shard].status = 1
-        result[0].encSafeKeyShards[shard].decData = decShard
+        // const decShard = await idx.ceramic.did.decryptDagJWE(
+        //     result[0].encSafeKeyShards[shard].encShard
+        //   )
+        // result[0].encSafeKeyShards[shard].status = 1
+        // result[0].encSafeKeyShards[shard].decData = decShard
 
-        await client.save(threadId,'Safes',[result[0]])
+        // await client.save(threadId,'Safes',[result[0]])
         
         return true
        

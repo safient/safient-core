@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.7;
-
+pragma experimental ABIEncoderV2;
 import "./IArbitrable.sol";
 import "./IArbitrator.sol";
 import "./IEvidence.sol";
@@ -31,6 +31,11 @@ contract SafexMain is IArbitrable, IEvidence {
         uint256 evidenceGroupId;
         ClaimStatus status;
         string result;
+    }
+
+    struct RecoveryProof {
+        bytes32 secretHash;
+        address guardianAddress;
     }
 
     /* Storage - Public */
@@ -306,6 +311,145 @@ contract SafexMain is IArbitrable, IEvidence {
         emit Evidence(arbitrator, claim.evidenceGroupId, msg.sender, _evidence);
     }
 
+    // function getMessageHash(
+    //     string memory _message
+    // )
+    //     public pure returns (bytes32)
+    // {
+    //     return keccak256(abi.encodePacked(_message));
+    // }
+
+    //  function getEthSignedMessageHash(bytes32 _messageHash) public pure returns (bytes32) {
+    //     /*
+    //     Signature is produced by signing a keccak256 hash with the following format:
+    //     "\x19Ethereum Signed Message\n" + len(msg) + msg
+    //     */
+    //     return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageHash));
+    // }
+
+
+    // function guardianProof(
+    //     string memory _message, 
+        // bytes memory _signature, 
+        // string[] memory secrets, 
+        // string memory _safeId ) 
+    //     public returns(bool)
+    // {
+
+    //         uint256 noOfGuardians = secrets.length;
+    //         Safe memory safe = safes[_safeId];
+
+    //         bytes32 r;
+    //         bytes32 s;
+    //         uint8 v;
+
+           
+    //        if (_signature.length != 65){
+    //         return false;
+    //     }
+    //     assembly {
+    //         r := mload(add(_signature, 32))
+    //         s := mload(add(_signature, 64))
+    //         v := byte(0, mload(add(_signature, 96)))
+    //     }
+    //     if (v < 27){
+    //         v += 27;
+    //     }
+    //     if (v != 27 && v != 28){
+    //         return false;
+    //         }
+    //         else{
+    //             bool recoverStatus = (_message, r, s, v, safe.safeCreatedBy);
+    //             // if(recoverStatus && safe.safeFunds != 0){
+
+    //             //      uint256 guardianValue = safe.safeFunds/noOfGuardians;
+
+    //             //      for(uint8 guardianIndex = 0; guardianIndex < noOfGuardians; guardianIndex++){
+    //             //             //1. Check if the hashes match
+    //             //             for(uint8 secretIndex = 0; secretIndex < secrets.length; secretIndex++){
+    //             //                 if(_recoverProofArray[guardianIndex].secretHash == keccak256(abi.encodePacked(secrets[secretIndex]))){
+    //             //                         safe.safeFunds -= guardianValue;
+    //             //                         _recoverProofArray[guardianIndex].guardianAddress.call{value:guardianValue}("");
+    //             //                 }
+    //             //             }                         
+    //             //      }
+    //                  return recoverStatus;
+    //             // }
+    //             // else{
+    //             //     return false;
+    //             // }
+    //         }
+    // }
+
+    function getMessageHash(
+        string memory _message
+    )
+        public pure returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(_message));
+    }
+
+     function getEthSignedMessageHash(bytes32 _messageHash) public pure returns (bytes32) {
+        /*
+        Signature is produced by signing a keccak256 hash with the following format:
+        "\x19Ethereum Signed Message\n" + len(msg) + msg
+        */
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageHash));
+    }
+
+    function guardianProof(
+        string memory _message,
+        bytes memory _signature, 
+        RecoveryProof[] memory _guardianproof,
+        string[] memory _secrets, 
+        string memory _safeId )
+    public
+    payable
+    returns (bool)
+    {
+        Safe memory safe = safes[_safeId];
+        uint256 noOfGuardians = _secrets.length;
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        if (_signature.length != 65){
+            return false;
+        }
+        assembly {
+            r := mload(add(_signature, 32))
+            s := mload(add(_signature, 64))
+            v := byte(0, mload(add(_signature, 96)))
+        }
+        if (v < 27){
+            v += 27;
+        }
+        if (v != 27 && v != 28){
+            return false;
+        } else {
+            bytes32 _messagehash = getMessageHash(_message);
+            bytes32 _hash = getEthSignedMessageHash(_messagehash);
+            address creator = ecrecover(_hash, v, r, s );
+            if(creator == safe.safeCreatedBy && safe.safeFunds != 0){
+                uint256 guardianValue = safe.safeFunds/noOfGuardians;
+
+                for(uint8 guardianIndex = 0; guardianIndex < _guardianproof.length; guardianIndex++){
+
+                    //Check if the hashes match
+                    for(uint8 secretIndex = 0; secretIndex < noOfGuardians; secretIndex++){
+                        if(_guardianproof[guardianIndex].secretHash == keccak256(abi.encodePacked(_secrets[secretIndex]))){
+                            safe.safeFunds -= guardianValue;
+                            _guardianproof[guardianIndex].guardianAddress.call{value: guardianValue}("");
+                        }
+                    }
+                }
+                return true;
+            }else{
+                return false;
+            }
+        }
+    }
+
     /* Setters */
     function setTotalClaimsAllowed(uint256 _claimsAllowed)
         public
@@ -329,5 +473,9 @@ contract SafexMain is IArbitrable, IEvidence {
         returns (uint256 totalClaimsAllowed)
     {
         return _totalClaimsAllowed;
+    }
+
+    function getSafeStage(uint256 _claimId) public view returns (ClaimStatus) {
+        return claims[_claimId].status;
     }
 }

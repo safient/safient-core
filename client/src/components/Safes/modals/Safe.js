@@ -16,7 +16,7 @@ import * as Icons from 'react-feather';
 import makeStyles from '../makeStyles';
 
 import { decryptData } from '../../../utils/aes';
-import { getSafeData, claimSafe, decryptShards } from '../../../lib/safientDB';
+import { getSafeData, claimSafe, decryptShards, updateStage } from '../../../lib/safientDB';
 import shamirs from "shamirs-secret-sharing"
 import { utils } from 'ethers';
 import ipfsPublish from '../../../ipfs/ipfsPublish';
@@ -148,7 +148,7 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
   const [evidenceName, setEvidenceName] = useState("Test Evidence");
   const [evidenceDescription, setEvidenceDescription] = useState("Evidence description to claim the safe");
 
-  const stages = {
+  const SafeStage = {
     "ACTIVE" : 0,
     "CLAIMING": 1,
     "RECOVERING": 2,
@@ -164,6 +164,7 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
       if (idx && safe.safeId) {
         const safeData = await getSafeData(safe.safeId)
         console.log(safeData)
+        setSafeData(safeData)
         setSafeType(safe.type)
         //const shards = safeData.encSafeKeyShards
         // 
@@ -185,27 +186,40 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
         }
         
         if(safe.type === "inheritor" ){
+          // const claimStage = await writeContracts.SafexMain.getSafeStage()
+          console.log("Safe Stage", safeData.stage)
 
-          if(safeData.stage === 2){
+
+          if(safeData.stage === 1) {
+            const claimStage = await writeContracts.SafexMain.getSafeStage(safeData.claims[0].disputeID)
+            console.log("Claim Stage",claimStage);
+            if(claimStage === 1){
+                await updateStage(safe.safeId, claimStage, 2)
+            }
+          }
+          else if(safeData.stage === 3 || safeData.stage === 4 ){
 
             let shards = []
             let res
 
-              safeData.encSafeKeyShards.map(share => {
+            safeData.encSafeKeyShards.map(share => {
               console.log(share)
-              share.status === 1 ? shards.push(share.decData) : null
+              share.status === 1 ? shards.push(share.decData.share) : null
             })
             if(shards.length !== []){
               console.log(shards)
                 const reconstructedData = shamirs.combine([Buffer.from(shards[0]), Buffer.from(shards[1])])
-                aesKey = await idx.ceramic.did.decryptDagJWE(JSON.parse(reconstructedData.toString()))
+                const encData = JSON.parse(reconstructedData.toString())
+                aesKey = await idx.ceramic.did.decryptDagJWE(encData.recipentEnc)
                 const decryptedData = await decryptData(
                   Buffer.from(safeData.encSafeData, 'hex'),
                   aesKey
                 )
                 console.log(decryptedData)
                 res = JSON.parse(decryptedData.toString('utf8'))
-                console.log(res)
+                if(res && safeData.stage === 3){
+                  await updateStage(safe.safeId, 1, 4)
+                }
                 setSafeData(res)
                 setSafeShow(true)
             }
@@ -298,9 +312,42 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
   
 
   const handleRecover = async () => {
-    if(safe.safeId){
-      //use decryptShards check of anyone of the shards are decrypted and change stage to 3 
-      const res = await decryptShards(idx, safe.safeId, shard)
+    if(safeData.stage === 4){
+      let shards = [];
+      let guardianArray = [];
+      let guardianSecret = [];
+      safeData.encSafeKeyShards.map(share => {
+        console.log(share)
+        if(share.status == 1){
+          shards.push(share.decData.share)
+          guardianSecret.push(share.decData.secret)
+        }
+      })
+
+
+      if(shards.length !== []){
+        console.log(guardianSecret);
+          const reconstructedData = shamirs.combine([Buffer.from(shards[0]), Buffer.from(shards[1])])
+          const recoveryData = JSON.parse(reconstructedData.toString())
+          console.log(recoveryData);
+          const message =recoveryData.message
+          message.data.guardians.map(guardian => {
+            const guardianTuple = [guardian.secret, guardian.address]
+            guardianArray.push(guardianTuple)
+          })
+          console.log(guardianArray);
+          const tx = await writeContracts.SafexMain.guardianProof( 
+            JSON.stringify(message),
+            recoveryData.signature,
+            guardianArray,
+            guardianSecret, 
+            safe.safeId)
+          console.log(tx);
+          
+      }
+    }
+    else{
+      const res = await decryptShards(idx, safe.safeId, shard, address)
       console.log(res)
     }
   }
