@@ -109,6 +109,7 @@ const SearchResultsModal = ({
       },
     };
     const cid = await ipfsPublish('metaEvidence.json', encoder.encode(JSON.stringify(metaevidenceObj)));
+    console.log(cid);
     const metaevidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
     return metaevidenceURI
   }

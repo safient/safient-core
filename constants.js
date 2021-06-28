@@ -7,7 +7,7 @@ const arbitratorContract = 'AutoAppealableArbitrator';
 const arbitrationFee = utils.parseEther('0.001').toNumber();
 
 // testnet
-const arbitratorAddress = '0xAa72231a8CC83cd87299a8E4F59ce0cb566B8B00';
+const arbitratorAddress = '0xf31Fb836E463eBd00B792B10f48D7a1DFfC02731';
 
 // local && testnet
 const arbitrableContract = 'SafexMain';

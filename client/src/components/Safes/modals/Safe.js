@@ -339,7 +339,10 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
           const tx = await writeContracts.SafexMain.guardianProof( 
             JSON.stringify(message),
             recoveryData.signature,
+            //[[data1], [data2], [data3]]
+            //[{data1}, {data2}]x
             guardianArray,
+            //message.data.guardians,
             guardianSecret, 
             safe.safeId)
           console.log(tx);

@@ -463,11 +463,20 @@ export const claimSafe = async (safeId, did, disputeId) => {
 
         if(result[0].stage === 0){
             result[0].stage = 1
-            result[0].claims = [{
-            "createdBy": did,
-            "claimStatus": claimStages.ACTIVE,
-            "disputeID": disputeId
-        }]
+            if( result[0].claims === 0 || result[0].claims === undefined){
+                result[0].claims = [{
+                    "createdBy": did,
+                    "claimStatus": claimStages.ACTIVE,
+                    "disputeID": disputeId
+                }]
+            }else{
+                result[0].claims.push({
+                    "createdBy": did,
+                    "claimStatus": claimStages.ACTIVE,
+                    "disputeID": disputeId
+                })
+            }
+           
         }
         await client.save(threadId,'Safes',[result[0]])
         console.log("Claim added to threadDB")
