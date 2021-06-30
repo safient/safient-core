@@ -39,7 +39,8 @@ const SearchResultsModal = ({
   caller,
   network,
   address,
-  writeContracts
+  writeContracts,
+  injectedProvider
 }) => {
   const [loading, setLoading] = useState(false);
   const [loaderData, setLoaderData] = useState({});
@@ -49,7 +50,7 @@ const SearchResultsModal = ({
   const [reciverDetails, setReciverDetails] = useState(null);
   const [inheritorAddress, setInheritorAddress] = useState('');
   const [arbitrationFee, setArbitrationFee] = useState('');
-  const [extraFeeEth, setExtraFeeEth] = useState(null);
+  const [extraFeeEth, setExtraFeeEth] = useState();
 
 
   const [toast, setToast] = useToasts();
@@ -74,7 +75,10 @@ const SearchResultsModal = ({
         const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
           writeContracts.AutoAppealableArbitrator.address
         );
-        setArbitrationFee(arbitrationFeeWei);
+        const extraFeeWei = utils.parseEther("0.01");
+        console.log(extraFeeWei)
+        const totalFee = (Number(arbitrationFeeWei) + Number(extraFeeWei)).toString();
+        setArbitrationFee(totalFee);
       } catch (e) {
         console.log(e)
       }
@@ -105,6 +109,7 @@ const SearchResultsModal = ({
       },
     };
     const cid = await ipfsPublish('metaEvidence.json', encoder.encode(JSON.stringify(metaevidenceObj)));
+    console.log(cid);
     const metaevidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
     return metaevidenceURI
   }
@@ -127,20 +132,24 @@ const SearchResultsModal = ({
 
     const enc = await idx.ceramic.did.createDagJWE(aesKey, [idx.id]);
 
-    const data = await createNewSafe(caller.did, userResult.did, enc, recipentEnc, encryptedData, idx)
+    const data = await createNewSafe(caller.did, userResult.did, enc, recipentEnc, encryptedData, idx, injectedProvider, address)
 
     let txReceipt
     if(data.status){
         if(extraFeeEth!==null){
-          const extraFeeWei = utils.parseEther(extraFeeEth);
+          const extraFeeWei = utils.parseEther("0.01");
           const totalFee = (Number(arbitrationFee) + Number(extraFeeWei)).toString();
           setArbitrationFee(totalFee)
         }else{
-          const totalFee = (Number(arbitrationFee)).toString();
+          const extraFeeWei = utils.parseEther("0.01");
+          console.log(extraFeeWei)
+          const totalFee = (Number(arbitrationFee) + Number(extraFeeEth)).toString();
+          console.log(totalFee)
           setArbitrationFee(totalFee)
         }
 
         const metaevidenceURI = await createMetaData(writeContracts.SafexMain.address, address);
+        console.log(arbitrationFee)
         const tx = await writeContracts.SafexMain.createSafe(userResult.address, data.safeId, metaevidenceURI, { value: arbitrationFee });
         txReceipt = await tx.wait();
     }else{

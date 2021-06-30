@@ -26,8 +26,9 @@ import Funds from './components/Funds/Funds';
 import Safes from './components/Safes/Safes';
 import Profile from "./components/Profile/Profile";
 import Content from "./components/Safes/Content";
+import Web3 from "web3";
 
-const targetNetwork = NETWORKS['localhost'];
+const targetNetwork = NETWORKS['kovan'];
 const localProviderUrl = targetNetwork.rpcUrl;
 const localProvider = new StaticJsonRpcProvider(localProviderUrl);
 
@@ -40,6 +41,7 @@ function App() {
   const [userData, setUserData] =useState([]);
   const [identity, setIdentity] = useState(null);
   const [provider, setProvider] = useState(null);
+  const [web3, setWeb3] = useState(null);
   const [arbitrationFee, setArbitrationFee] = useState(null);
   const userProvider = useUserProvider(injectedProvider, localProvider);
   const address = useUserAddress(userProvider);
@@ -51,14 +53,12 @@ function App() {
   let archon;
 
 
-  if(targetNetwork.name){
-  if (network === 'localhost') {
+  if(targetNetwork.name === 'localhost'){
     archon = new Archon('http://127.0.0.1:8545');
   } else {
-    archon = new Archon(`https://${network}.infura.io/v3/2138913d0e324125bf671fafd93e186c`, 'https://ipfs.kleros.io');
+    archon = new Archon(`https://${targetNetwork.name}.infura.io/v3/2138913d0e324125bf671fafd93e186c`, 'https://ipfs.kleros.io');
   }
 
-  }
 
   useEffect(() => {
     async function init() {
@@ -66,6 +66,7 @@ function App() {
         const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
           writeContracts.AutoAppealableArbitrator.address
         );
+
         setArbitrationFee(arbitrationFeeWei)
       } catch (e) {
         console.log(e)
@@ -102,7 +103,6 @@ function App() {
     async function setProvider() {
       const provider = await web3Modal.connect();
       setInjectedProvider(new Web3Provider(provider));
-      console.log(provider)
       await connectUser(null);
     }
     setProvider();
@@ -171,6 +171,7 @@ function App() {
                   address={address} 
                   writeContracts={writeContracts}
                   arbitrationFee={arbitrationFee}
+                  injectedProvider={injectedProvider}
               />
             </Tabs.Item>
             <Tabs.Item label="profile" value="10">
@@ -178,6 +179,7 @@ function App() {
                 ceramic={ceramic} 
                 idx={idx} 
                 identity={identity} 
+                web3 = {web3}
                 user={user} 
                 userData={userData} 
                 setUser={setUser} 

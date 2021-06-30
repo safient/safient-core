@@ -114,11 +114,9 @@ const useStyles = makeStyles((ui) => ({
   },
 }));
 
-const Content = ({ idx, user, userData, network, address, writeContracts, arbitrationFee }) => {
+const Content = ({ idx, user, userData, network, address, writeContracts, arbitrationFee, injectedProvider }) => {
   const [caller, setCaller] = useState(null);
   const [userArray, setUserArray] = useState([{}]);
-
-  console.log(userData)
 
   const [requested, setRequested] = useState([]);
   const [sharedPortfolio, setSharedPortfolio] = useState([]);
@@ -179,6 +177,7 @@ const Content = ({ idx, user, userData, network, address, writeContracts, arbitr
         network={network}
         address={address}
         writeContracts={writeContracts}
+        injectedProvider = {injectedProvider}
       />
       {/* <TestModal searchResults={searchResults} /> */}
       <Safe
