@@ -114,9 +114,8 @@ const useStyles = makeStyles((ui) => ({
   },
 }));
 
-const Content = ({ idx, user, userData, network, address, writeContracts, arbitrationFee, injectedProvider }) => {
-  const [caller, setCaller] = useState(null);
-  const [userArray, setUserArray] = useState([{}]);
+const Content = ({ idx, sc, user, userData, network, address, writeContracts, arbitrationFee, injectedProvider, connection }) => {
+  
 
   const [requested, setRequested] = useState([]);
   const [sharedPortfolio, setSharedPortfolio] = useState([]);
@@ -124,19 +123,9 @@ const Content = ({ idx, user, userData, network, address, writeContracts, arbitr
   const [portfolioModal, setPortfolioModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loaderData, setLoaderData] = useState({});
+  const [caller, setCaller] = useState(null)
   const [searchResults, setSearchResults] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      if (idx && user === 2) {
-        const { userArray, caller } = await getAllUsers(userData.did);
-        setSharedPortfolio(userData.safes)
-        setCaller(userData);
-        setUserArray(userArray);
-      }
-    }
-    load();
-  }, [idx, user]);
 
   const onClickCard = (safe) => {
     setSelectedPortfolio(safe);
@@ -153,7 +142,8 @@ const Content = ({ idx, user, userData, network, address, writeContracts, arbitr
       content: 'Fetching portfolio',
     });
     setLoading(true);
-    const userData = await getLoginUser(idx.id);
+    const userData = await sc.safientCore.getLoginUser(connection, idx.id);
+    setCaller(userData.email)
     setSharedPortfolio(userData.safes);
     setLoading(false);
   };
@@ -170,9 +160,11 @@ const Content = ({ idx, user, userData, network, address, writeContracts, arbitr
       />
       <CreateSafeModal
         idx={idx}
+        connection = {connection}
+        sc={sc}
         searchResults={searchResults}
         setSearchResults={setSearchResults}
-        caller={caller}
+        caller = {caller}
         requested={requested}
         network={network}
         address={address}
@@ -183,6 +175,8 @@ const Content = ({ idx, user, userData, network, address, writeContracts, arbitr
       <Safe
         state={portfolioModal}
         idx={idx}
+        sc = {sc}
+        connection = {connection}
         safe={selectedPortfolio}
         user={user}
         setSafeModal={setPortfolioModal}
