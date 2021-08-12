@@ -15,8 +15,6 @@ import {
 import * as Icons from 'react-feather';
 import makeStyles from '../makeStyles';
 
-import { decryptData } from '../../../utils/aes';
-import { getSafeData, claimSafe, decryptShards, updateStage } from '../../../lib/safientDB';
 import shamirs from "shamirs-secret-sharing"
 import { utils } from 'ethers';
 import ipfsPublish from '../../../ipfs/ipfsPublish';
@@ -134,7 +132,7 @@ const useStyles = makeStyles((ui) => ({
   },
 }));
 
-function Safe({ state, idx, safe, user, setSafeModal, network, address, writeContracts, arbitrationFee }) {
+function Safe({ state, idx, sc , connection, safe, user, setSafeModal, network, address, writeContracts, arbitrationFee }) {
   const [safeData, setSafeData] = useState({});
   const [showSafe, setSafeShow] = useState(false);
   const [modal, setModal] = useState(false);
@@ -162,68 +160,40 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
   useEffect(() => {
     async function loadSafe() {
       if (idx && safe.safeId) {
-        const safeData = await getSafeData(safe.safeId)
-        console.log(safeData)
+        const safeData = await sc.safientCore.getSafeData(connection, safe.safeId)
         setSafeData(safeData)
         setSafeType(safe.type)
         //const shards = safeData.encSafeKeyShards
         // 
-        let aesKey
 
         if(safe.type === "creator"){
-          aesKey = await idx.ceramic.did.decryptDagJWE(
-            safeData.encSafeKey
-          )
-            const decryptedData = await decryptData(
-              Buffer.from(safeData.encSafeData, 'hex'),
-              aesKey
+          
+            const decryptedData = await sc.safientCore.decryptSafeData(
+              connection,
+              safe.safeId
             );
-            console.log(decryptedData)
-            const res = JSON.parse(decryptedData.toString('utf8'));
-            console.log(res)
-            setSafeData(res)
+            setSafeData(decryptedData)
             setSafeShow(true)
         }
         
-        if(safe.type === "inheritor" ){
-          // const claimStage = await writeContracts.SafexMain.getSafeStage()
+        if(safe.type === "beneficiary" ){
+          //const claimStage = await writeContracts.SafexMain.getSafeStage()
           console.log("Safe Stage", safeData.stage)
 
 
           if(safeData.stage === 1) {
-            const claimStage = await writeContracts.SafexMain.getSafeStage(safeData.claims[0].disputeID)
-            console.log("Claim Stage",claimStage);
-            if(claimStage === 1){
-                await updateStage(safe.safeId, claimStage, 2)
-            }
+            const res = await sc.safientCore.syncStage(connection, safe.safeId)
+            console.log(res)
           }
           else if(safeData.stage === 3 || safeData.stage === 4 ){
 
-            let shards = []
-            let res
-
-            safeData.encSafeKeyShards.map(share => {
-              console.log(share)
-              share.status === 1 ? shards.push(share.decData.share) : null
-            })
-            if(shards.length !== []){
-              console.log(shards)
-                const reconstructedData = shamirs.combine([Buffer.from(shards[0]), Buffer.from(shards[1])])
-                const encData = JSON.parse(reconstructedData.toString())
-                aesKey = await idx.ceramic.did.decryptDagJWE(encData.recipentEnc)
-                const decryptedData = await decryptData(
-                  Buffer.from(safeData.encSafeData, 'hex'),
-                  aesKey
-                )
-                console.log(decryptedData)
-                res = JSON.parse(decryptedData.toString('utf8'))
-                if(res && safeData.stage === 3){
-                  await updateStage(safe.safeId, 1, 4)
+          
+               const res = await sc.safientCore.recoverData(connection, safe.safeId, idx.id);
+                if(res){
+                  setSafeData(res)
+                  setSafeShow(true)
                 }
-                setSafeData(res)
-                setSafeShow(true)
             }
-          }
         else{
           setSafeShow(false)
         }
@@ -244,51 +214,20 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
   const captureFile = (event) => {
     event.preventDefault();
     const file = event.target.files[0];
-    setFileName(file.name);
-    setFileExtension(file.name.split('.')[1]);
-    const reader = new window.FileReader();
-    reader.readAsArrayBuffer(file);
-    reader.onloadend = () => {
-      setBuffer(Buffer(reader.result));
-    };
+    setFileName(file);
   };
 
 
-  const createEvidenceURI = async (fileName, buffer) => {
-    const fileCid = await ipfsPublish(fileName, buffer);
-          const fileURI = `/ipfs/${fileCid[1].hash}${fileCid[0].path}`;
-          const evidenceObj = {
-            fileURI,
-            fileHash: fileCid[1].hash,
-            fileTypeExtension: fileExtension,
-            name: evidenceName,
-            description: evidenceDescription,
-          };
-          const cid = await ipfsPublish('evidence.json', encoder.encode(JSON.stringify(evidenceObj)));
-          const evidenceURI = `/ipfs/${cid[1].hash}${cid[0].path}`;
-          return evidenceURI
-  }
-  const handleClaim = async (e) => {
-    e.preventDefault()
+
+  const handleClaim = async () => {
     try{
-      if(safe.safeId && buffer!==null){
+      if(safe.safeId){
         setLoaderData({
           heading: 'Creating Claim  ',
           content: 'Creating Claim',
         });
-        setLoading(true);
-        const evidenceURI = await createEvidenceURI(fileName, buffer)
-        console.log(evidenceURI)
-        const tx = await writeContracts.SafexMain.createClaim(safe.safeId, evidenceURI);
-        const txReceipt = await tx.wait();
-        console.log(txReceipt)
-
-        if(txReceipt.status === 1){
-          let disputeId = txReceipt.events[2].args[2]
-         
-          console.log(disputeId._hex)
-          console.log("Transaction successful")
-          const res = await claimSafe(safe.safeId, idx.id, parseInt(disputeId._hex))
+          setLoading(true);
+          const res = await sc.safientCore.claimSafe(connection, safe.safeId, fileName, "Test", "Desc")
           console.log(res)
           setLoading(false);
         }
@@ -301,56 +240,20 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
         }
         //contract interaction to create claim. 
         //use claimSafe itself to create claim and write into it
-        
-      }
     }catch(e){
       console.log(e)
     }
-
   }
 
   
 
   const handleRecover = async () => {
     if(safeData.stage === 4){
-      let shards = [];
-      let guardianArray = [];
-      let guardianSecret = [];
-      safeData.encSafeKeyShards.map(share => {
-        console.log(share)
-        if(share.status == 1){
-          shards.push(share.decData.share)
-          guardianSecret.push(share.decData.secret)
-        }
-      })
-
-
-      if(shards.length !== []){
-        console.log(guardianSecret);
-          const reconstructedData = shamirs.combine([Buffer.from(shards[0]), Buffer.from(shards[1])])
-          const recoveryData = JSON.parse(reconstructedData.toString())
-          console.log(recoveryData);
-          const message =recoveryData.message
-          message.data.guardians.map(guardian => {
-            const guardianTuple = [guardian.secret, guardian.address]
-            guardianArray.push(guardianTuple)
-          })
-          console.log(guardianArray);
-          const tx = await writeContracts.SafexMain.guardianProof( 
-            JSON.stringify(message),
-            recoveryData.signature,
-            //[[data1], [data2], [data3]]
-            //[{data1}, {data2}]x
-            guardianArray,
-            //message.data.guardians,
-            guardianSecret, 
-            safe.safeId)
-          console.log(tx);
-          
-      }
+      const res = await sc.safientCore.incentiviseGuardians(connection, safe.safeId);
+      console.log(res)
     }
     else{
-      const res = await decryptShards(idx, safe.safeId, shard, address)
+      const res = await sc.safientCore.guardianRecovery(connection, safe.safeId, idx.id)
       console.log(res)
     }
   }
@@ -429,9 +332,9 @@ function Safe({ state, idx, safe, user, setSafeModal, network, address, writeCon
                             :
                             <>
                             {
-                              safeType === "inheritor" ? 
+                              safeType === "beneficiary" ? 
                               <>
-                              <Button auto type='success' size='mini' onClick={(e) => handleClaim(e)} >
+                              <Button auto type='success' size='mini' onClick={handleClaim} >
                                 Claim
                               </Button>
                               <Input type='file' onChange={captureFile} width='70%'>

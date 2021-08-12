@@ -6,12 +6,7 @@ import { useUserAddress } from "eth-hooks";
 import { useUserProvider, useContractLoader, useBalance } from "./hooks";
 import { NETWORKS } from "./networks";
 import { Text, Page, Tabs, Row, Col, Spacer } from "@geist-ui/react";
-import {generateSignature} from "./lib/signerConnect"
-import {generateIDX} from "./lib/identity"
-import {definitions} from "./utils/config.json";
-import {loginUserWithChallenge} from "./utils/threadDB"
-import {getLoginUser, getSafeData} from './lib/safientDB'
-import {PrivateKey} from "@textile/hub"
+import {getSigner} from "./lib/signerConnect"
 import Archon from '@kleros/archon';
 
 import ContractsNotDeployed from './components/ContractsNotDeployed/ContractsNotDeployed';
@@ -27,8 +22,10 @@ import Safes from './components/Safes/Safes';
 import Profile from "./components/Profile/Profile";
 import Content from "./components/Safes/Content";
 import Web3 from "web3";
+import {SafientSDK} from '@safient/core'
+import { set } from "ramda";
 
-const targetNetwork = NETWORKS['kovan'];
+const targetNetwork = NETWORKS['localhost'];
 const localProviderUrl = targetNetwork.rpcUrl;
 const localProvider = new StaticJsonRpcProvider(localProviderUrl);
 
@@ -39,8 +36,10 @@ function App() {
   const [idx, setIdx] = useState(null);
   const [user, setUser] = useState(0);
   const [userData, setUserData] =useState([]);
-  const [identity, setIdentity] = useState(null);
-  const [provider, setProvider] = useState(null);
+  const [connection, setConnection] = useState(null)
+  const [client, setClient] = useState(null);
+  const [threadId, setThreadId] = useState(null);
+  const [sc, setSc] = useState(null)
   const [web3, setWeb3] = useState(null);
   const [arbitrationFee, setArbitrationFee] = useState(null);
   const userProvider = useUserProvider(injectedProvider, localProvider);
@@ -60,50 +59,43 @@ function App() {
   }
 
 
-  useEffect(() => {
-    async function init() {
-      try {
-        const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
-          writeContracts.AutoAppealableArbitrator.address
-        );
+  // useEffect(() => {
+  //   async function init() {
+  //     try {
+  //       const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
+  //         writeContracts.AutoAppealableArbitrator.address
+  //       );
 
-        setArbitrationFee(arbitrationFeeWei)
-      } catch (e) {
-        console.log(e)
-      }
-    }
-    init();
-  }, [writeContracts]);
+  //       setArbitrationFee(arbitrationFeeWei)
+  //     } catch (e) {
+  //       console.log(e)
+  //     }
+  //   }
+  //   init();
+  // }, [writeContracts]);
 
 
-  const connectUser = async (provider) => {
+  const connectUser = async () => {
+    console.log(process.env.REACT_APP_USER_API_KEY)
     console.log('connect')
-    const {seed, web3Provider} = await generateSignature(provider);
-    setProvider(web3Provider)
-    const {idx, ceramic} = await generateIDX(seed);
-    setIdx(idx)
-    console.log(idx)
-    const identity = PrivateKey.fromRawEd25519Seed(Uint8Array.from(seed))
-    setIdentity(identity)
-    let threadData = null
-    const client = await loginUserWithChallenge(identity);
-    if (client !== null) {
-      //call middleWare
-      setCeramic(ceramic)
-      threadData = await getLoginUser(idx.id)
-    }
-    console.log(client)
-    const data = await idx.get(definitions.profile, idx.id)
-    setUserData(threadData)
-    setUser((threadData && data) ? 2 : 1)
-    return {idx, identity, threadData}
+    const signer = await getSigner();
+    console.log(signer)
+    let sdk = new SafientSDK(signer, 31337);
+    setSc(sdk);
+    const user = await sdk.safientCore.connectUser(process.env.REACT_APP_USER_API_KEY, process.env.REACT_USER_API_SECRET);
+    const userRes = await sdk.safientCore.getLoginUser(user, user.idx.id);
+    setUserData(userRes)
+    setConnection(user)
+    setIdx(user.idx);
+    setClient(user.client);
+    setThreadId(user.threadId)
   }
 
   const loadWeb3Modal = useCallback(() => {
     async function setProvider() {
       const provider = await web3Modal.connect();
       setInjectedProvider(new Web3Provider(provider));
-      await connectUser(null);
+      await connectUser();
     }
     setProvider();
   }, [setInjectedProvider]);
@@ -160,11 +152,16 @@ function App() {
               <Safes writeContracts={writeContracts} />
             </Tabs.Item>
             <Tabs.Item label='claims' value='8'>
-              <Claims writeContracts={writeContracts} />
+              <Claims 
+              idx ={idx}
+              sc = {sc} 
+              connection = {connection}
+               />
             </Tabs.Item>
             <Tabs.Item label="Safe" value="9">
               <Content 
-                  idx={idx} 
+                  idx={idx}
+                  sc={sc}
                   user={user} 
                   userData={userData}
                   network={targetNetwork.name} 
@@ -172,13 +169,14 @@ function App() {
                   writeContracts={writeContracts}
                   arbitrationFee={arbitrationFee}
                   injectedProvider={injectedProvider}
+                  connection={connection}
               />
             </Tabs.Item>
             <Tabs.Item label="profile" value="10">
               <Profile 
-                ceramic={ceramic} 
-                idx={idx} 
-                identity={identity} 
+                idx={idx}
+                sc= {sc}
+                client={client} 
                 web3 = {web3}
                 user={user} 
                 userData={userData} 
@@ -186,6 +184,7 @@ function App() {
                 setUserData={setUserData}
                 address={address}
                 arbitrationFee={arbitrationFee}
+                connection = {connection}
               />
             </Tabs.Item>
           </Tabs>

@@ -38,7 +38,7 @@ const generateMessageForEntropy = (ethereum_address, application_name) => {
     );
   }
 
-  const getSigner = async () => {
+  export const getSigner = async () => {
     if (!window.ethereum) {
       throw new Error(
         'Ethereum is not connected. Please download Metamask from https://metamask.io/download.html'
