@@ -1,198 +1,225 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { StaticJsonRpcProvider, Web3Provider } from "@ethersproject/providers";
-import Web3Modal from "web3modal";
-import WalletConnectProvider from "@walletconnect/web3-provider";
-import { useUserAddress } from "eth-hooks";
-import { useUserProvider, useContractLoader, useBalance } from "./hooks";
-import { NETWORKS } from "./networks";
-import { Text, Page, Tabs, Row, Col, Spacer } from "@geist-ui/react";
-import {getSigner} from "./lib/signerConnect"
-import Archon from '@kleros/archon';
+import { useCallback, useEffect, useState } from 'react';
+import { StaticJsonRpcProvider, Web3Provider } from '@ethersproject/providers';
+import { parseEther, formatEther } from '@ethersproject/units';
+import { NETWORK } from './networks';
+import Web3Modal from 'web3modal';
+import WalletConnectProvider from '@walletconnect/web3-provider';
+import { Text, Button, Tag, Dot, Page, Tabs, Loading, Spacer, Divider, useToasts, Modal, Input } from '@geist-ui/react';
+import { SafientCore } from '@safient/core';
 
-import ContractsNotDeployed from './components/ContractsNotDeployed/ContractsNotDeployed';
-import ConnectWeb3Modal from './components/ConnectWeb3Modal/ConnectWeb3Modal';
-import SafexMainDetails from './components/SafexMainDetails/SafexMainDetails';
-import SubmitEvidence from './components/SubmitEvidence/SubmitEvidence';
-import Ruling from './components/Ruling/Ruling';
-import Claim from './components/Ruling/Ruling';
-import MyAccount from './components/MyAccount/MyAccount';
-import Claims from './components/Claims/Claims';
-import Funds from './components/Funds/Funds';
-import Safes from './components/Safes/Safes';
-import Profile from "./components/Profile/Profile";
-import Content from "./components/Safes/Content";
-import Web3 from "web3";
-import {SafientSDK} from '@safient/core'
-import { set } from "ramda";
+const localProvider = new StaticJsonRpcProvider('http://localhost:8545');
 
-const targetNetwork = NETWORKS['localhost'];
-const localProviderUrl = targetNetwork.rpcUrl;
-const localProvider = new StaticJsonRpcProvider(localProviderUrl);
+const App = () => {
+  const [injectedProvider, setInjectedProvider] = useState(null);
 
-function App() {
+  const [selectedNetwork, setSelectedNetwork] = useState(null);
+  const [isNetwork, setIsNetwork] = useState(false);
 
-  const [injectedProvider, setInjectedProvider] = useState();
-  const [ceramic, setCeramic] = useState(null);
-  const [idx, setIdx] = useState(null);
-  const [user, setUser] = useState(0);
-  const [userData, setUserData] =useState([]);
-  const [connection, setConnection] = useState(null)
-  const [client, setClient] = useState(null);
-  const [threadId, setThreadId] = useState(null);
-  const [sc, setSc] = useState(null)
-  const [web3, setWeb3] = useState(null);
-  const [arbitrationFee, setArbitrationFee] = useState(null);
-  const userProvider = useUserProvider(injectedProvider, localProvider);
-  const address = useUserAddress(userProvider);
-  const balance = useBalance(userProvider, address);
-  const localChainId = localProvider && localProvider._network && localProvider._network.chainId;
-  const selectedChainId = userProvider && userProvider._network && userProvider._network.chainId;
-  const writeContracts = useContractLoader(userProvider);
-  let network
-  let archon;
+  const [address, setAddress] = useState(null);
+  const [balance, setBalance] = useState(null);
 
+  const [sdk, setSdk] = useState(null);
 
-  if(targetNetwork.name === 'localhost'){
-    archon = new Archon('http://127.0.0.1:8545');
-  } else {
-    archon = new Archon(`https://${targetNetwork.name}.infura.io/v3/2138913d0e324125bf671fafd93e186c`, 'https://ipfs.kleros.io');
-  }
+  const [toasts, setToast] = useToasts();
+  const [loading, setLoading] = useState(false);
 
+  const [user, setUser] = useState(null);
 
-  // useEffect(() => {
-  //   async function init() {
-  //     try {
-  //       const arbitrationFeeWei = await archon.arbitrator.getArbitrationCost(
-  //         writeContracts.AutoAppealableArbitrator.address
-  //       );
+  const [name, setName] = useState(null);
+  const [email, setEmail] = useState(null);
 
-  //       setArbitrationFee(arbitrationFeeWei)
-  //     } catch (e) {
-  //       console.log(e)
-  //     }
-  //   }
-  //   init();
-  // }, [writeContracts]);
+  const [modal, setModal] = useState(true);
 
-
-  const connectUser = async () => {
-    console.log(process.env.REACT_APP_USER_API_KEY)
-    console.log('connect')
-    const signer = await getSigner();
-    console.log(signer)
-    let sdk = new SafientSDK(signer, 31337);
-    setSc(sdk);
-    const user = await sdk.safientCore.connectUser(process.env.REACT_APP_USER_API_KEY, process.env.REACT_USER_API_SECRET);
-    const userRes = await sdk.safientCore.getLoginUser(user, user.idx.id);
-    setUserData(userRes)
-    setConnection(user)
-    setIdx(user.idx);
-    setClient(user.client);
-    setThreadId(user.threadId)
-  }
+  const closeHandler = (event) => {
+    setModal(false);
+  };
 
   const loadWeb3Modal = useCallback(() => {
     async function setProvider() {
       const provider = await web3Modal.connect();
-      setInjectedProvider(new Web3Provider(provider));
-      await connectUser();
+      const injectedProvider = new Web3Provider(provider);
+      setInjectedProvider(injectedProvider);
+      await connectUser(injectedProvider);
     }
     setProvider();
   }, [setInjectedProvider]);
 
-  // useEffect(() => {
-  //   function init() {
-  //     if (web3Modal.cachedProvider) {
-  //       loadWeb3Modal();
-  //     }
-  //   }
-  //   init();
-  // }, [loadWeb3Modal]);
+  const connectUser = async (provider) => {
+    const network = await provider.getNetwork();
+    const chainId = network.chainId;
+    const selectedNetwork = NETWORK(chainId);
+
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    setAddress(address);
+    const balance = await signer.getBalance();
+    setBalance(formatEther(balance));
+
+    const sdk = new SafientCore(signer, chainId, 'threadDB');
+    setSdk(sdk);
+
+    if (selectedNetwork !== null && selectedNetwork !== undefined) {
+      setSelectedNetwork(selectedNetwork);
+      if (selectedNetwork.chainId == 31337 || selectedNetwork.chainId == 1 || selectedNetwork.chainId == 4) {
+        setIsNetwork(true);
+
+        if (user === null) {
+          setLoading(true);
+          const res = await sdk.loginUser('bjotvawozxytpzemtrei3a2zquq', 'b55myxtcfe3fqgwze7hbr336in3avvbbkj3kzfda');
+          if (!res.status) {
+            setToast({ text: `User dosen't exist! Create a new user.`, type: 'warning' });
+            setLoading(false);
+          } else {
+            setToast({ text: `You are loged in!`, type: 'success' });
+            const user = await sdk.getUser({ email: res.data.email });
+            setUser(user);
+            setLoading(false);
+          }
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    async function init() {
+      if (web3Modal.cachedProvider) {
+        loadWeb3Modal();
+      }
+    }
+    init();
+  }, [loadWeb3Modal]);
+
+  const createUser = async (e) => {
+    e.preventDefault();
+    if (name !== null && email !== null) {
+      setLoading(true);
+      const user = await sdk.createUser(name, email, 0, address);
+      if (user.status) {
+        setLoading(false);
+      }
+    }
+  };
 
   return (
-    <Page size='large'>
-      <Row align='middle'>
-        <Col span={20}>
-          <Page.Header>
-            <Text h2>Safex Claims</Text>
-          </Page.Header>
-        </Col>
-        <Col span={4}>
-          <ConnectWeb3Modal web3Modal={web3Modal} loadWeb3Modal={loadWeb3Modal} logoutOfWeb3Modal={logoutOfWeb3Modal} />
-        </Col>
-      </Row>
-      {injectedProvider === undefined ? (
-        <Text>A claim resolution platform for all the safex safes</Text>
-      ) : localChainId && selectedChainId && localChainId != selectedChainId ? (
-        <ContractsNotDeployed localChainId={localChainId} selectedChainId={selectedChainId} />
-      ) : (
-        <>
-          <Spacer y={1} />
-          <Tabs initialValue='2'>
-            <Spacer y={1} />
-            <Tabs.Item label='safex' value='1'>
-              <SafexMainDetails writeContracts={writeContracts} />
-            </Tabs.Item>
-            <Tabs.Item label='account' value='2'>
-              <MyAccount address={address} balance={balance} writeContracts={writeContracts} />
-            </Tabs.Item>
-            {/* <Tabs.Item label='create safe' value='3'>
-              <CreateSafe network={targetNetwork.name} address={address} writeContracts={writeContracts} />
-            </Tabs.Item> */}
-            <Tabs.Item label='create claim' value='4'>
-              <Ruling network={targetNetwork.name} writeContracts={writeContracts} arbitrationFee={arbitrationFee}/>
-            </Tabs.Item>
-            <Tabs.Item label='submit evidence' value='5'>
-              <SubmitEvidence writeContracts={writeContracts} />
-            </Tabs.Item>
-            <Tabs.Item label='funds' value='6'>
-              <Funds writeContracts={writeContracts} />
-            </Tabs.Item>
-            <Tabs.Item label='safes' value='7'>
-              <Safes writeContracts={writeContracts} />
-            </Tabs.Item>
-            <Tabs.Item label='claims' value='8'>
-              <Claims 
-              idx ={idx}
-              sc = {sc} 
-              connection = {connection}
-               />
-            </Tabs.Item>
-            <Tabs.Item label="Safe" value="9">
-              <Content 
-                  idx={idx}
-                  sc={sc}
-                  user={user} 
-                  userData={userData}
-                  network={targetNetwork.name} 
-                  address={address} 
-                  writeContracts={writeContracts}
-                  arbitrationFee={arbitrationFee}
-                  injectedProvider={injectedProvider}
-                  connection={connection}
-              />
-            </Tabs.Item>
-            <Tabs.Item label="profile" value="10">
-              <Profile 
-                idx={idx}
-                sc= {sc}
-                client={client} 
-                web3 = {web3}
-                user={user} 
-                userData={userData} 
-                setUser={setUser} 
-                setUserData={setUserData}
-                address={address}
-                arbitrationFee={arbitrationFee}
-                connection = {connection}
-              />
-            </Tabs.Item>
-          </Tabs>
-        </>
-      )}
-    </Page>
+    <>
+      <Page style={{ width: '1000px' }}>
+        <Page.Content>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>Safient Core</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {selectedNetwork !== null && selectedNetwork !== undefined ? (
+                <>
+                  <Dot style={{ marginRight: '20px' }} type='success'>
+                    {selectedNetwork.chainId} - {selectedNetwork.name}
+                  </Dot>
+                </>
+              ) : null}
+              <Spacer />
+              {address !== null && balance !== null ? (
+                <>
+                  <Button type='secondary' auto width='30%' mx='5px' onClick={logoutOfWeb3Modal}>
+                    Disconnect
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button type='secondary' auto width='30%' mx='5px' onClick={loadWeb3Modal}>
+                    Connect
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+          <Spacer />
+          {address !== null && balance !== null ? (
+            <>
+              <Tabs initialValue='1'>
+                <Tabs.Item label='Account' value='1'>
+                  <Spacer />
+                  <h4>Wallet Details</h4>
+                  <Text>{address}</Text>
+                  <Text>{balance} ETH</Text>
+                  <Divider />
+                  {isNetwork ? (
+                    <>
+                      {!loading && user !== null ? (
+                        <>
+                          <h4>Login Details</h4>
+                          <Text>{user.did}</Text>
+                          <Text>{user.name}</Text>
+                          <Text>{user.email}</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Spacer />
+                          <Loading type='secondary'>Sign the message & wait for a few seconds to log in </Loading>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <Modal width='50rem' visible={modal} onClose={closeHandler}>
+                      <Text h3>Select supported network!</Text>
+                      <Modal.Content>
+                        <Spacer />
+                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                          <Button auto type='secondary-light' disabled onClick={() => changeNetwork('0x1')}>
+                            1 - Mainnet
+                          </Button>
+                          <Button auto type='secondary-light' onClick={() => changeNetwork('0x4')}>
+                            4 - Rinkeby
+                          </Button>
+                          <Button auto type='secondary-light' onClick={() => changeNetwork('0x31337')}>
+                            31337 - Localhost
+                          </Button>
+                        </div>
+                      </Modal.Content>
+                    </Modal>
+                  )}
+                </Tabs.Item>
+                <Tabs.Item label='Create User' value='2'>
+                  <Spacer y={2} />
+                  <form>
+                    <Input status='secondary' onChange={(e) => setName(e.target.value)} width='50%'>
+                      <Text b>Name :</Text>
+                    </Input>
+                    <Input status='secondary' onChange={(e) => setEmail(e.target.value)} width='50%'>
+                      <Text b>Email :</Text>
+                    </Input>
+                    <Spacer />
+                    <Spacer y={2} />
+                    {!loading ? (
+                      <Button type='secondary' auto onClick={createUser}>
+                        Create User
+                      </Button>
+                    ) : (
+                      <Button type='secondary' auto loading>
+                        Create User
+                      </Button>
+                    )}
+                  </form>
+                </Tabs.Item>
+              </Tabs>
+            </>
+          ) : null}
+        </Page.Content>
+      </Page>
+    </>
   );
-}
+};
+
+const changeNetwork = async (network) => {
+  if (window.ethereum) {
+    try {
+      await window.ethereum.enable();
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: network }],
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+};
 
 const web3Modal = new Web3Modal({
   cacheProvider: true,
@@ -200,7 +227,7 @@ const web3Modal = new Web3Modal({
     walletconnect: {
       package: WalletConnectProvider,
       options: {
-        infuraId: process.env.REACT_APP_INFURA_API_KEY,
+        infuraId: 'baba8e335c45440fbdd81a5812b65d06',
       },
     },
   },
